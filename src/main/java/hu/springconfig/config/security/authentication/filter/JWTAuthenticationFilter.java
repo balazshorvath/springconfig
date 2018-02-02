@@ -2,7 +2,7 @@ package hu.springconfig.config.security.authentication.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
-import hu.springconfig.config.security.authentication.user.Credentials;
+import hu.springconfig.data.dto.authentication.Credentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
