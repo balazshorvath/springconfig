@@ -1,6 +1,6 @@
 package hu.springconfig.config.security.authentication;
 
-import hu.springconfig.Util;
+import hu.springconfig.util.Util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

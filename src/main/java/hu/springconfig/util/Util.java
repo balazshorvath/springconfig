@@ -1,4 +1,4 @@
-package hu.springconfig;
+package hu.springconfig.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
