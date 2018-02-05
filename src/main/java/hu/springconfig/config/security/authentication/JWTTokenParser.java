@@ -1,5 +1,6 @@
 package hu.springconfig.config.security.authentication;
 
+import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.util.Util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -17,6 +18,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * JWT parse logic implementation.
+ */
 @Component
 public class JWTTokenParser {
     public static final String AUTHENTICATION_HEADER = "Authentication";
@@ -26,13 +30,15 @@ public class JWTTokenParser {
     @Value("${jwt.signature.secret}")
     private String signatureSecret;
 
-    public void createAndSetToken(HttpServletResponse response, User user){
+    public void createAndSetToken(HttpServletResponse response, Identity user){
+        // TODO proper authentication
         String roles = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
 
         Claims claims = Jwts.claims()
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .setSubject(user.getUsername());
         claims.put("roles", roles);
+        claims.put("id", user.)
 
         response.setHeader(
                 AUTHENTICATION_HEADER,
@@ -43,7 +49,7 @@ public class JWTTokenParser {
         );
     }
 
-    public UsernamePasswordAuthenticationToken parseToken(HttpServletRequest request){
+    public Identity parseToken(HttpServletRequest request){
         String token = request.getHeader(AUTHENTICATION_HEADER);
         if(token == null || !token.startsWith(TOKEN_PREFIX)){
             return null;
@@ -60,6 +66,7 @@ public class JWTTokenParser {
         }
         List<GrantedAuthority> authorityList = AuthorityUtils.commaSeparatedStringToAuthorityList(roles);
 
+        // TODO proper authentication
         return new UsernamePasswordAuthenticationToken(user, null, authorityList);
     }
 }

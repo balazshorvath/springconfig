@@ -54,6 +54,18 @@ public class SpecificationsUtils {
         return predicate;
     }
 
+    /**
+     * Supported field types:
+     *  Any primitive and their class pair.
+     *  Date
+     *  String
+     *
+     * @param fieldCondition
+     * @param root
+     * @param cb
+     * @param <T>
+     * @return
+     */
     public static <T> Predicate createPredicateField(FieldCondition fieldCondition, Root<T> root, CriteriaBuilder cb) {
         Predicate predicate = null;
         String[] join = fieldCondition.getFieldName().split("\\.");

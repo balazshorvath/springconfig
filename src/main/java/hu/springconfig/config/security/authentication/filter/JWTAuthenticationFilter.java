@@ -19,6 +19,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * Defines the URL, that is used for authentication (see the constructor).
+ * Extracts the authentication data from the request ({@link #attemptAuthentication(HttpServletRequest, HttpServletResponse)}).
+ * If the authentication was successful, creates the JWT token and {@link JWTTokenParser} puts the token into the response
+ * ({@link #successfulAuthentication(HttpServletRequest, HttpServletResponse, FilterChain, Authentication)}).
+ */
 @Component
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     @Autowired
@@ -28,11 +34,16 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Autowired
     private ObjectMapper objectMapper;
 
+    public JWTAuthenticationFilter() {
+        setFilterProcessesUrl("/auth");
+    }
+
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         Authentication authentication = null;
         try {
             Credentials credentials = objectMapper.readValue(request.getInputStream(), Credentials.class);
+            // TODO proper authentication
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword(), new ArrayList<>()));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -42,6 +53,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
+        // TODO proper authentication
         tokenParser.createAndSetToken(response, (User) authResult.getPrincipal());
     }
 }

@@ -3,6 +3,7 @@ package hu.springconfig.config.security;
 import hu.springconfig.config.security.authentication.AppUserDetailsService;
 import hu.springconfig.config.security.authentication.filter.JWTAuthenticationFilter;
 import hu.springconfig.config.security.authentication.filter.JWTAuthorizationFilter;
+import hu.springconfig.config.security.authentication.provider.IdentityAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private JWTAuthenticationFilter jwtAuthenticationFilter;
     @Autowired
     private JWTAuthorizationFilter jwtAuthorizationFilter;
+    @Autowired
+    private IdentityAuthenticationProvider identityAuthenticationProvider;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -43,7 +46,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)
-                .passwordEncoder(bCryptPasswordEncoder);
+                .passwordEncoder(bCryptPasswordEncoder)
+                .and().authenticationProvider(identityAuthenticationProvider);
     }
 //    @Bean
 //    public AuthenticationEntryPoint unauthorizedEntryPoint() {

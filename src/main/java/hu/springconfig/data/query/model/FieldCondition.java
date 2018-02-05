@@ -4,8 +4,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Root;
 import javax.validation.constraints.NotNull;
 
+/**
+ * Defines a condition for a field for supported types check
+ * {@link hu.springconfig.data.query.SpecificationsUtils#createPredicateField(FieldCondition, Root, CriteriaBuilder)}
+ *
+ * For foreign tables use fieldName.otherField
+ * Example: user.id
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonDeserialize

@@ -11,6 +11,11 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * A {@link Privilege} is the smallest unit of authority.
+ * A {@link Role} consists of multiple Privileges.
+ * An {@link Identity} can have multiple Roles.
+ */
 @Data
 @NoArgsConstructor
 @Entity
@@ -41,6 +46,14 @@ public class Role {
         this.role = role;
     }
 
+    /**
+     * Role values(also id in the DB) should be defined in a way, that a Role with higher value
+     * is superior to the ones with a smaller value.
+     *
+     * For example when granting roles:
+     *      A user can only grant a role to another, if MAX(current.roles) <= roleToGrant
+     * The same rule applies to deleting users, updating users, depriving roles etc.
+     */
     public enum Roles {
         USER(0),
         ADMIN(100);

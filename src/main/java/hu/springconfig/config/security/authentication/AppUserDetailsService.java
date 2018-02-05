@@ -9,6 +9,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * Gets the {@link Identity} from the database by the username property.
+ */
 @Service
 public class AppUserDetailsService implements UserDetailsService {
     @Autowired
@@ -20,6 +23,6 @@ public class AppUserDetailsService implements UserDetailsService {
         if(identity == null){
             throw new UsernameNotFoundException("Identity not found.");
         }
-        return new User(identity.getUsername(), identity.getPassword(), identity.createGrantedAuthorities());
+        return identity;
     }
 }

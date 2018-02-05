@@ -6,6 +6,7 @@ import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.repository.authentication.IPrivilegeRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
 import hu.springconfig.service.authentication.IdentityService;
+import hu.springconfig.service.base.LoggingComponent;
 import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class InitDatabase implements ApplicationListener<ApplicationReadyEvent> {
+public class InitDatabase extends LoggingComponent implements ApplicationListener<ApplicationReadyEvent> {
     @Autowired
     private IdentityService identityService;
     @Autowired
@@ -47,6 +48,7 @@ public class InitDatabase implements ApplicationListener<ApplicationReadyEvent> 
             adminIdentity.setUsername("administrator");
             adminIdentity.setRoles(Collections.singleton(new Role(Role.Roles.ADMIN)));
             identityService.createIdentity(adminIdentity);
+            log.warn("Recognized, that this is a newly deployed version. Created a new user with admin role, you can now login with the password: {}. Please change is ASAP!", password);
         }
     }
 

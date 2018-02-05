@@ -10,6 +10,11 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
+/**
+ * A {@link Privilege} is the smallest unit of authority.
+ * A {@link Role} consists of multiple Privileges.
+ * An {@link Identity} can have multiple Roles.
+ */
 @Data
 @NoArgsConstructor
 @Entity
