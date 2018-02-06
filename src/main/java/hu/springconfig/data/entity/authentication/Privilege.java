@@ -5,10 +5,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 /**
  * A {@link Privilege} is the smallest unit of authority.
@@ -18,13 +15,19 @@ import javax.persistence.Id;
 @Data
 @NoArgsConstructor
 @Entity
+@Table(
+        name = "Privilege",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "privilegeUnique", columnNames = "privilege")
+        }
+)
 public class Privilege {
     @Id
     private Integer id;
     @Enumerated(EnumType.STRING)
     private Privileges privilege;
 
-    public GrantedAuthority createGrantedAuthority(){
+    public GrantedAuthority createGrantedAuthority() {
         return new SimpleGrantedAuthority(privilege.name());
     }
 
@@ -34,19 +37,19 @@ public class Privilege {
     }
 
     public enum Privileges {
-        USER_CREATE(1),
-        USER_UPDATE(2),
-        USER_GET(3),
-        USER_LIST(4),
-        USER_DELETE(5);
+        IDENTITY_GET(1),
+        IDENTITY_LIST(2),
+        IDENTITY_UPDATE(3),
+        IDENTITY_GRANT(4),
+        IDENTITY_DELETE(5);
 
         private final Integer value;
 
-        Privileges(Integer value){
+        Privileges(Integer value) {
             this.value = value;
         }
 
-        public Integer getValue(){
+        public Integer getValue() {
             return this.value;
         }
     }

@@ -19,6 +19,12 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @Entity
+@Table(
+        name = "Role",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "roleUnique", columnNames = "role")
+        }
+)
 public class Role {
     @Id
     private Integer id;
@@ -27,15 +33,15 @@ public class Role {
 
     @ManyToMany
     @JoinTable(
-            name = "role_privileges",
+            name = "RolePrivileges",
             joinColumns = @JoinColumn(
-                    name = "role_id", referencedColumnName = "id"),
+                    name = "roleId", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(
-                    name = "privilege_id", referencedColumnName = "id")
+                    name = "privilegeId", referencedColumnName = "id")
     )
     private Set<Privilege> privileges;
 
-    public Collection<? extends GrantedAuthority> createGrantedAuthorities(){
+    public Collection<? extends GrantedAuthority> createGrantedAuthorities() {
         Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(Collectors.toList());
         authorities.add(new SimpleGrantedAuthority(role.name()));
         return authorities;
@@ -49,9 +55,9 @@ public class Role {
     /**
      * Role values(also id in the DB) should be defined in a way, that a Role with higher value
      * is superior to the ones with a smaller value.
-     *
+     * <p>
      * For example when granting roles:
-     *      A user can only grant a role to another, if MAX(current.roles) <= roleToGrant
+     * A user can only grant a role to another, if MAX(current.roles) <= roleToGrant
      * The same rule applies to deleting users, updating users, depriving roles etc.
      */
     public enum Roles {
@@ -60,11 +66,11 @@ public class Role {
 
         private final Integer value;
 
-        Roles(Integer value){
+        Roles(Integer value) {
             this.value = value;
         }
 
-        public Integer getValue(){
+        public Integer getValue() {
             return this.value;
         }
     }

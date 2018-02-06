@@ -17,22 +17,22 @@ public class Util {
         return collection != null && !collection.isEmpty();
     }
 
-    public static class ArrayListBuilder<T> {
+    public static class CollectionBuilder<T> {
         private Collection<T> collection;
 
-        private ArrayListBuilder(Collection<T> collection) {
+        private CollectionBuilder(Collection<T> collection) {
             this.collection = collection;
         }
 
-        public static <E> ArrayListBuilder<E> newList() {
-            return new ArrayListBuilder<>(new ArrayList<>());
+        public static <E> CollectionBuilder<E> newList() {
+            return new CollectionBuilder<>(new ArrayList<>());
         }
 
-        public static <E> ArrayListBuilder<E> newSet() {
-            return new ArrayListBuilder<>(new HashSet<>());
+        public static <E> CollectionBuilder<E> newSet() {
+            return new CollectionBuilder<>(new HashSet<>());
         }
 
-        public ArrayListBuilder<T> add(T t) {
+        public CollectionBuilder<T> add(T t) {
             this.collection.add(t);
             return this;
         }
@@ -42,10 +42,11 @@ public class Util {
         }
 
     }
-    public static String randomString(String characterPool, int length){
+
+    public static String randomString(String characterPool, int length) {
         StringBuilder sb = new StringBuilder(length);
         Random random = new Random();
-        for (int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             int index = random.nextInt(characterPool.length());
             sb.append(characterPool.charAt(index));
         }

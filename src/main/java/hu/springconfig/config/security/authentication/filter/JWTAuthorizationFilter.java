@@ -1,10 +1,10 @@
 package hu.springconfig.config.security.authentication.filter;
 
+import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.entity.authentication.Identity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -31,12 +31,9 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        // TODO proper authentication
         Identity identity = tokenParser.parseToken(request);
-        Authentication authentication = new  UsernamePasswordAuthenticationToken()
-        if(authentication != null){
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(request, response);
     }
 }
