@@ -1,7 +1,7 @@
 package hu.springconfig.data.query.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import hu.springconfig.data.query.json.ConditionDeserializer;
+import hu.springconfig.config.json.ConditionDeserializer;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;

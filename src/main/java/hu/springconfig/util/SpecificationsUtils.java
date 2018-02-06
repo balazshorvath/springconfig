@@ -1,4 +1,4 @@
-package hu.springconfig.data.query;
+package hu.springconfig.util;
 
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.query.model.ConditionSet;

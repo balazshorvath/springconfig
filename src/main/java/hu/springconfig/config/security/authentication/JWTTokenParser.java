@@ -32,13 +32,13 @@ public class JWTTokenParser {
 
     public void createAndSetToken(HttpServletResponse response, Identity user){
         // TODO proper authentication
-        String roles = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
+        String roles = user.getRoles().stream().map(role -> role.getRole().name()).collect(Collectors.joining(","));
 
         Claims claims = Jwts.claims()
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .setSubject(user.getUsername());
         claims.put("roles", roles);
-        claims.put("id", user.)
+        claims.put("id", user.getId());
 
         response.setHeader(
                 AUTHENTICATION_HEADER,

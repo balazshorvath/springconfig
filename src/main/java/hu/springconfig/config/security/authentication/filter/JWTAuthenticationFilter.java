@@ -1,8 +1,11 @@
 package hu.springconfig.config.security.authentication.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
+import hu.springconfig.data.entity.authentication.Identity;
+import hu.springconfig.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,17 +46,15 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Authentication authentication = null;
         try {
             Credentials credentials = objectMapper.readValue(request.getInputStream(), Credentials.class);
-            // TODO proper authentication
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword(), new ArrayList<>()));
+            authentication = authenticationManager.authenticate(new JWTAuthenticationToken(null, credentials, new ArrayList<>()));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new BadRequestException("Could not parse credentials.", e);
         }
         return authentication;
     }
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-        // TODO proper authentication
-        tokenParser.createAndSetToken(response, (User) authResult.getPrincipal());
+        tokenParser.createAndSetToken(response, (Identity) authResult.getPrincipal());
     }
 }

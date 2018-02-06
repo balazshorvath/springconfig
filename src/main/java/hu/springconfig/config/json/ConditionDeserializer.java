@@ -1,4 +1,4 @@
-package hu.springconfig.data.query.json;
+package hu.springconfig.config.json;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
