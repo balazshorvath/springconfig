@@ -28,10 +28,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if(exception.getCause() != null){
             error.setOriginalException(exception.getCause().getClass());
         }
-        if(Util.notNullAndNotEmpty(exception.getMessageId())){
-            error.setMessage(messageProvider.getMessage(exception.getMessageId()));
-        }else {
-            error.setMessage(exception.getMessage());
+        if(Util.notNullAndNotEmpty(exception.getMessage())){
+            error.setMessage(messageProvider.getMessage(exception.getMessage()));
         }
 
         return handleExceptionInternal(exception, error, headers, error.getStatus(), request);

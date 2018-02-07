@@ -6,14 +6,11 @@ import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.BadRequestException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.stereotype.Component;
+import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,17 +25,15 @@ import java.util.ArrayList;
  * If the authentication was successful, creates the JWT token and {@link JWTTokenParser} puts the token into the response
  * ({@link #successfulAuthentication(HttpServletRequest, HttpServletResponse, FilterChain, Authentication)}).
  */
-@Component
-public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    @Autowired
+public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
     private JWTTokenParser tokenParser;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
     private ObjectMapper objectMapper;
 
-    public JWTAuthenticationFilter() {
-        setFilterProcessesUrl("/auth");
+    public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser, ObjectMapper objectMapper) {
+        super(new AntPathRequestMatcher("/auth", "POST"));
+        setAuthenticationManager(authenticationManager);
+        this.tokenParser = tokenParser;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -46,7 +41,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Authentication authentication = null;
         try {
             Credentials credentials = objectMapper.readValue(request.getInputStream(), Credentials.class);
-            authentication = authenticationManager.authenticate(new JWTAuthenticationToken(null, credentials, new ArrayList<>()));
+            authentication = getAuthenticationManager().authenticate(new JWTAuthenticationToken(null, credentials, new ArrayList<>()));
         } catch (IOException e) {
             throw new BadRequestException("Could not parse credentials.", e);
         }

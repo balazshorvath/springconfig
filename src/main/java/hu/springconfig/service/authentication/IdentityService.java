@@ -11,6 +11,7 @@ import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -21,7 +22,7 @@ public class IdentityService extends LoggingComponent {
     @Autowired
     private IIdentityRepository identityRepository;
     @Autowired
-    private BCryptPasswordEncoder encoder;
+    private PasswordEncoder encoder;
 
 
     public Identity grantRoles(Identity current, Long id, Set<Role.Roles> roles) {
@@ -113,7 +114,7 @@ public class IdentityService extends LoggingComponent {
     }
 
     public void checkPasswordValidity(String password, String passwordConfirm) {
-        if (!Util.notNullAndNotEmpty(password) || Util.notNullAndNotEmpty(passwordConfirm)
+        if (!Util.notNullAndNotEmpty(password) || !Util.notNullAndNotEmpty(passwordConfirm)
                 || !password.equals(passwordConfirm)) {
             throw new BadRequestException("validation.password.confirm.mismatch");
         }

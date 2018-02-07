@@ -2,6 +2,8 @@ package hu.springconfig.data.entity.authentication;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -26,6 +28,8 @@ import java.util.Set;
                 @UniqueConstraint(name = "identityEmailUnique", columnNames = "email")
         }
 )
+@EqualsAndHashCode(exclude = {"roles", "password", "version"})
+@ToString(exclude = {"password"})
 public class Identity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,14 +40,14 @@ public class Identity implements UserDetails {
     private String email;
     @JsonIgnore
     private String password;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "IdentityRoles",
+            name = "identity_roles",
             joinColumns = @JoinColumn(
-                    name = "identityId", referencedColumnName = "id"
+                    name = "identity_id", referencedColumnName = "id"
             ),
             inverseJoinColumns = @JoinColumn(
-                    name = "roleId", referencedColumnName = "id"
+                    name = "role_id", referencedColumnName = "id"
             )
     )
     private Set<Role> roles;
@@ -69,11 +73,13 @@ public class Identity implements UserDetails {
         );
     }
 
+    @JsonIgnore
     public Role getHighestRole() {
         return this.roles.stream().max(Comparator.comparingInt(o -> o.getRole().getValue()))
                 .orElse(null);
     }
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> authorities = new ArrayList<>();

@@ -39,6 +39,8 @@ public class JWTAuthenticationToken extends AbstractAuthenticationToken {
 
     @Override
     public void eraseCredentials() {
-        this.credentials.eraseCredentials();
+        if(credentials != null) {
+            this.credentials.eraseCredentials();
+        }
     }
 }

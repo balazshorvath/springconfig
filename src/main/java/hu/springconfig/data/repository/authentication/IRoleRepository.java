@@ -9,5 +9,5 @@ import java.util.Set;
 
 @Repository
 public interface IRoleRepository extends CrudRepository<Role, Integer> {
-    Set<Role> findByIdentity(Identity identity);
+    Set<Role> findAllByIdentities(Identity identity);
 }

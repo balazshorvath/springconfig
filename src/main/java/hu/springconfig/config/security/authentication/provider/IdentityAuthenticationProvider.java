@@ -22,6 +22,10 @@ public class IdentityAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        // This is already a valid token
+        if(authentication.getPrincipal() != null && authentication.getPrincipal() instanceof Identity){
+            return authentication;
+        }
         if (!(authentication.getCredentials() instanceof Credentials)) {
             return null;
         }

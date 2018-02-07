@@ -1,6 +1,8 @@
 package hu.springconfig.config.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.springconfig.config.security.authentication.AppUserDetailsService;
+import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.config.security.authentication.filter.JWTAuthenticationFilter;
 import hu.springconfig.config.security.authentication.filter.JWTAuthorizationFilter;
 import hu.springconfig.config.security.authentication.provider.IdentityAuthenticationProvider;
@@ -15,6 +17,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -23,9 +27,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private AppUserDetailsService userDetailsService;
     @Autowired
-    private JWTAuthenticationFilter jwtAuthenticationFilter;
+    private JWTTokenParser jwtTokenParser;
     @Autowired
-    private JWTAuthorizationFilter jwtAuthorizationFilter;
+    private ObjectMapper objectMapper;
     @Autowired
     private IdentityAuthenticationProvider identityAuthenticationProvider;
 
@@ -35,11 +39,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/register").permitAll()
+                .antMatchers("/auth/register", "/auth").permitAll()
                 .anyRequest().authenticated()
-                .and()
-                .addFilter(jwtAuthenticationFilter)
-                .addFilter(jwtAuthorizationFilter)
+                .and().httpBasic().disable()
+                .addFilterBefore(new JWTAuthenticationFilter(authenticationManager(), jwtTokenParser, objectMapper), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JWTAuthorizationFilter(authenticationManager(), jwtTokenParser), BasicAuthenticationFilter.class)
                 .anonymous().disable();
     }
     @Override
@@ -53,8 +57,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //        return (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 //    }
 
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
 }

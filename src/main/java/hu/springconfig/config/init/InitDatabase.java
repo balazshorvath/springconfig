@@ -44,10 +44,9 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
         if(adminIdentity == null){
             String password = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
             adminIdentity = new Identity();
-            adminIdentity.setPassword(password);
             adminIdentity.setUsername("administrator");
             adminIdentity.setRoles(Collections.singleton(new Role(Role.Roles.ADMIN)));
-            identityService.createIdentity(adminIdentity);
+            identityService.createIdentity(adminIdentity, password, password);
             log.warn("Recognized, that this is a newly deployed version. Created a new user with admin role, you can now login with the password: {}. Please change is ASAP!", password);
         }
     }

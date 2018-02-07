@@ -1,8 +1,10 @@
 package hu.springconfig.data.entity.authentication;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -25,21 +27,23 @@ import java.util.stream.Collectors;
                 @UniqueConstraint(name = "roleUnique", columnNames = "role")
         }
 )
+@EqualsAndHashCode(exclude = {"privileges", "identities"})
+@ToString(exclude = {"privileges", "identities"})
 public class Role {
     @Id
     private Integer id;
     @Enumerated(EnumType.STRING)
     private Roles role;
-
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "RolePrivileges",
-            joinColumns = @JoinColumn(
-                    name = "roleId", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(
-                    name = "privilegeId", referencedColumnName = "id")
+            name = "role_privileges",
+            joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "privilege_id", referencedColumnName = "id")
     )
     private Set<Privilege> privileges;
+    @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
+    private Set<Identity> identities;
 
     public Collection<? extends GrantedAuthority> createGrantedAuthorities() {
         Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(Collectors.toList());

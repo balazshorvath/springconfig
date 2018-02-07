@@ -21,7 +21,7 @@ public class AppUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Identity identity = identityRepository.findByUsername(username);
         if(identity == null){
-            throw new UsernameNotFoundException("Identity not found.");
+            throw new UsernameNotFoundException("Invalid credentials.");
         }
         return identity;
     }
