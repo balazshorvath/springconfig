@@ -11,6 +11,7 @@ import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Profile("initial")
 @Component
 public class InitDatabase extends LoggingComponent implements ApplicationListener<ApplicationReadyEvent> {
     @Autowired
@@ -41,7 +43,7 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
         initializeRoles();
         Identity adminIdentity = identityService.findByUsername("administrator");
         // In this case I assume, that the database is in an uninitialized state and needs an admin.
-        if(adminIdentity == null){
+        if (adminIdentity == null) {
             String password = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
             adminIdentity = new Identity();
             adminIdentity.setUsername("administrator");
@@ -54,10 +56,10 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
     /**
      * Create Privileges, if they are not in the database.
      */
-    private void initializePrivileges(){
+    private void initializePrivileges() {
         List<Privilege> privileges = Arrays.stream(Privilege.Privileges.values()).map(Privilege::new).collect(Collectors.toList());
-        for (Privilege privilege : privileges){
-            if(!privilegeRepository.exists(privilege.getId())){
+        for (Privilege privilege : privileges) {
+            if (!privilegeRepository.exists(privilege.getId())) {
                 privilegeRepository.save(privilege);
             }
         }
@@ -66,10 +68,10 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
     /**
      * Create Roles, if they are not in the database.
      */
-    private void initializeRoles(){
+    private void initializeRoles() {
         List<Role> roles = Arrays.stream(Role.Roles.values()).map(Role::new).collect(Collectors.toList());
-        for (Role role : roles){
-            if(!roleRepository.exists(role.getId())){
+        for (Role role : roles) {
+            if (!roleRepository.exists(role.getId())) {
                 roleRepository.save(role);
             }
         }

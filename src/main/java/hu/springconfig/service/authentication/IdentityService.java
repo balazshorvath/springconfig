@@ -2,15 +2,18 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.base.LoggingComponent;
+import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -103,6 +106,14 @@ public class IdentityService extends LoggingComponent {
         return identityRepository.save(identity);
     }
 
+    public void delete(Identity current, Long id) {
+        Identity identity = get(id);
+        if (identity.isSuperiorTo(current)) {
+            throw new AccessDeniedException("identity.low_rank");
+        }
+        identityRepository.delete(id);
+    }
+
     public Identity findByUsername(String username) {
         return identityRepository.findByUsername(username);
     }
@@ -118,5 +129,12 @@ public class IdentityService extends LoggingComponent {
                 || !password.equals(passwordConfirm)) {
             throw new BadRequestException("validation.password.confirm.mismatch");
         }
+    }
+
+    public Page<Identity> list(Condition condition, Pageable pageable) {
+        return identityRepository.findAll(
+                SpecificationsUtils.withQuery(condition),
+                pageable
+        );
     }
 }
