@@ -2,6 +2,7 @@ package hu.springconfig.exception;
 
 import org.springframework.http.HttpStatus;
 
+//TODO: extend this class with an entity and id, or value field
 public class NotFoundException extends ResponseException {
 
     public NotFoundException(String message) {

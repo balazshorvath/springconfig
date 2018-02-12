@@ -41,10 +41,11 @@ public class Privilege {
         IDENTITY_LIST(2),
         IDENTITY_UPDATE(3),
         IDENTITY_GRANT(4),
-        IDENTITY_DELETE(5),
-        ROLE_GET(6),
-        ROLE_LIST(7),
-        ROLE_UPDATE(8);
+        IDENTITY_DENY(5),
+        IDENTITY_DELETE(6),
+        ROLE_GET(7),
+        ROLE_LIST(8),
+        ROLE_UPDATE(9);
 
         private final Integer value;
 

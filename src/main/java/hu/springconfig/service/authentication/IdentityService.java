@@ -18,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class IdentityService extends LoggingComponent {
@@ -28,20 +27,31 @@ public class IdentityService extends LoggingComponent {
     private PasswordEncoder encoder;
 
 
-    public Identity grantRoles(Identity current, Long id, Set<Role.Roles> roles) {
+    public Identity grantRoles(Identity current, Long id, Set<Role> roles) {
         Identity grantTo = get(id);
         // If the identity has higher ranks, than the current
         if (grantTo.isSuperiorTo(current)) {
             /* Current user is not allowed to update user, because the target has a higher rank. */
             throw new AccessDeniedException("identity.low_rank");
         }
-        Role.Roles highest = current.getHighestRole().getRole();
-        if (roles.stream().anyMatch(role -> role.getValue() > highest.getValue())) {
+        Role highest = current.getHighestRole();
+        if (roles.stream().anyMatch(role -> role.getId() > highest.getId())) {
             /* Cannot grant roles higher, than own rank. */
             throw new AccessDeniedException("identity.low_rank");
         }
-        grantTo.setRoles(roles.stream().map(Role::new).collect(Collectors.toSet()));
+        grantTo.getRoles().addAll(roles);
         return identityRepository.save(grantTo);
+    }
+
+    public Identity denyRoles(Identity current, Long id, Set<Role> roles) {
+        Identity denyFrom = get(id);
+        // If the identity has higher ranks, than the current
+        if (denyFrom.isSuperiorTo(current)) {
+            /* Current user is not allowed to update user, because the target has a higher rank. */
+            throw new AccessDeniedException("identity.low_rank");
+        }
+        denyFrom.getRoles().removeAll(roles);
+        return identityRepository.save(denyFrom);
     }
 
     public Identity changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {

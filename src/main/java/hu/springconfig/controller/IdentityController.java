@@ -6,9 +6,9 @@ import hu.springconfig.data.dto.authentication.IdentityUpdate;
 import hu.springconfig.data.dto.authentication.SecuredUpdate;
 import hu.springconfig.data.dto.simple.OKResponse;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.service.authentication.IdentityService;
+import hu.springconfig.service.authentication.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +23,8 @@ import java.util.Set;
 public class IdentityController {
     @Autowired
     private IdentityService identityService;
+    @Autowired
+    private RoleService roleService;
 
     /* Standard user features */
 
@@ -31,7 +33,7 @@ public class IdentityController {
         Identity newIdentity = new Identity();
         newIdentity.setUsername(identity.getUsername());
         newIdentity.setEmail(identity.getEmail());
-        newIdentity.setRoles(Collections.singleton(new Role(Role.Roles.USER)));
+        newIdentity.setRoles(Collections.singleton(roleService.get(RoleService.USER_ROLE_ID)));
 
         identityService.createIdentity(newIdentity, identity.getPassword(), identity.getPasswordConfirm());
         return new OKResponse();
@@ -66,8 +68,14 @@ public class IdentityController {
 
     @PreAuthorize("hasAuthority('IDENTITY_GRANT')")
     @PostMapping("/auth/{id}/grant")
-    public Identity grant(@PathVariable Long id, @RequestBody Set<Role.Roles> roles, Authentication authentication) {
-        return identityService.grantRoles((Identity) authentication.getPrincipal(), id, roles);
+    public Identity grant(@PathVariable Long id, @RequestBody Set<Integer> roleIds, Authentication authentication) {
+        return identityService.grantRoles((Identity) authentication.getPrincipal(), id, roleService.getRoles(roleIds));
+    }
+
+    @PreAuthorize("hasAuthority('IDENTITY_DENY')")
+    @PostMapping("/auth/{id}/deny")
+    public Identity deny(@PathVariable Long id, @RequestBody Set<Integer> roleIds, Authentication authentication) {
+        return identityService.denyRoles((Identity) authentication.getPrincipal(), id, roleService.getRoles(roleIds));
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_GET') || @identityAuthorization.isSelf(authentication, #id)")

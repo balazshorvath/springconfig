@@ -69,13 +69,13 @@ public class Identity implements UserDetails {
         }
         // does "this" have any role, which is higher, than the maximum of the parameter's?
         return this.roles.stream().anyMatch(
-                role -> role.getRole().getValue() > max.getRole().getValue()
+                role -> role.getId() > max.getId()
         );
     }
 
     @JsonIgnore
     public Role getHighestRole() {
-        return this.roles.stream().max(Comparator.comparingInt(o -> o.getRole().getValue()))
+        return this.roles.stream().max(Comparator.comparingInt(Role::getId))
                 .orElse(null);
     }
 

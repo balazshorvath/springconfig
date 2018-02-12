@@ -10,4 +10,6 @@ import java.util.Set;
 @Repository
 public interface IRoleRepository extends CrudRepository<Role, Integer> {
     Set<Role> findAllByIdentities(Identity identity);
+
+    Role findByRole(String role);
 }

@@ -17,6 +17,13 @@ import java.util.stream.Collectors;
  * A {@link Privilege} is the smallest unit of authority.
  * A {@link Role} consists of multiple Privileges.
  * An {@link Identity} can have multiple Roles.
+ * <p>
+ * Role ids are not AI. They should be defined in a way, that a Role with higher id
+ * is superior to the ones with a smaller id.
+ * <p>
+ * For example when granting roles:
+ * A user can only grant a role to another, if MAX(current.roles) <= roleToGrant
+ * The same rule applies to deleting users, updating users, depriving roles etc.
  */
 @Data
 @NoArgsConstructor
@@ -32,8 +39,7 @@ import java.util.stream.Collectors;
 public class Role {
     @Id
     private Integer id;
-    @Enumerated(EnumType.STRING)
-    private Roles role;
+    private String role;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_privileges",
@@ -47,35 +53,8 @@ public class Role {
 
     public Collection<? extends GrantedAuthority> createGrantedAuthorities() {
         Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(Collectors.toList());
-        authorities.add(new SimpleGrantedAuthority(role.name()));
+        authorities.add(new SimpleGrantedAuthority(role));
         return authorities;
     }
 
-    public Role(Roles role) {
-        this.id = role.value;
-        this.role = role;
-    }
-
-    /**
-     * Role values(also id in the DB) should be defined in a way, that a Role with higher value
-     * is superior to the ones with a smaller value.
-     * <p>
-     * For example when granting roles:
-     * A user can only grant a role to another, if MAX(current.roles) <= roleToGrant
-     * The same rule applies to deleting users, updating users, depriving roles etc.
-     */
-    public enum Roles {
-        USER(0),
-        ADMIN(100);
-
-        private final Integer value;
-
-        Roles(Integer value) {
-            this.value = value;
-        }
-
-        public Integer getValue() {
-            return this.value;
-        }
-    }
 }
