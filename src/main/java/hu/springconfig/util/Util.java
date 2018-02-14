@@ -10,7 +10,7 @@ public class Util {
     public static final String CHAR_AND_NUMBER_WITH_SPECIALS_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~`!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/?";
 
     public static boolean notNullAndNotEmpty(String str) {
-        return str != null && !str.equals("");
+        return str != null && !str.isEmpty();
     }
 
     public static boolean notNullAndNotEmpty(Collection collection) {

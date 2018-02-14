@@ -3,12 +3,13 @@ package hu.springconfig.config.security.authentication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
+import hu.springconfig.exception.InvalidTokenException;
+import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.base.LoggingComponent;
 import hu.springconfig.util.Util;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +35,7 @@ public class JWTTokenParser extends LoggingComponent {
     @Value("${jwt.signature.secret}")
     private String signatureSecret;
     @Autowired
-    private IRoleRepository roleRepository;
+    private IIdentityRepository identityRepository;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -70,22 +71,26 @@ public class JWTTokenParser extends LoggingComponent {
         if (token == null || !token.startsWith(TOKEN_PREFIX)) {
             return null;
         }
-        Claims claims = Jwts.parser()
-                .setSigningKey(signatureSecret)
-                .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
-                .getBody();
-
+        Claims claims;
+        try {
+            claims = Jwts.parser()
+                    .setSigningKey(signatureSecret)
+                    .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
+                    .getBody();
+        }catch (ExpiredJwtException e){
+            throw new InvalidTokenException("jwt.expired");
+        }catch (ClaimJwtException e){
+            throw new InvalidTokenException("jwt.invalid");
+        }
         String user = claims.getSubject();
         Long id = claims.get("id", Long.class);
-        if (!Util.notNullAndNotEmpty(user) && id != null) {
+        if (!Util.notNullAndNotEmpty(user) && id == null) {
             return null;
         }
-        Identity identity = new Identity();
-        identity.setId(id);
-        identity.setUsername(user);
-        Set<Role> roleSet = roleRepository.findAllByIdentities(identity);
-        identity.setRoles(roleSet);
-
+        Identity identity = identityRepository.findOne(id);
+        if (identity.getTokenExpiration() != null && identity.getTokenExpiration().before(claims.getExpiration())){
+            throw new InvalidTokenException("jwt.expired");
+        }
         return identity;
     }
     @Data

@@ -30,12 +30,7 @@ public class IdentityController {
 
     @PostMapping("/auth/register")
     public OKResponse register(@RequestBody IdentityCreate identity) {
-        Identity newIdentity = new Identity();
-        newIdentity.setUsername(identity.getUsername());
-        newIdentity.setEmail(identity.getEmail());
-        newIdentity.setRoles(Collections.singleton(roleService.get(RoleService.USER_ROLE_ID)));
-
-        identityService.createIdentity(newIdentity, identity.getPassword(), identity.getPasswordConfirm());
+        identityService.createIdentity(identity.getUsername(), identity.getEmail(), identity.getPassword(), identity.getPasswordConfirm());
         return new OKResponse();
     }
 
@@ -80,19 +75,19 @@ public class IdentityController {
 
     @PreAuthorize("hasAuthority('IDENTITY_GET') || @identityAuthorization.isSelf(authentication, #id)")
     @GetMapping("/auth/{id}")
-    public Identity get(@RequestParam Long id) {
+    public Identity get(@PathVariable Long id) {
         return identityService.get(id);
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_UPDATE')")
     @PutMapping("/auth/{id}")
-    public Identity put(@RequestParam Long id, @RequestBody IdentityUpdate update, Authentication authentication) {
+    public Identity put(@PathVariable Long id, @RequestBody IdentityUpdate update, Authentication authentication) {
         return identityService.updateIdentity((Identity) authentication.getPrincipal(), id, update.getUsername(), update.getEmail());
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_DELETE')")
     @DeleteMapping("/auth/{id}")
-    public OKResponse delete(@RequestParam Long id, Authentication authentication) {
+    public OKResponse delete(@PathVariable Long id, Authentication authentication) {
         identityService.delete((Identity) authentication.getPrincipal(), id);
         return new OKResponse();
     }

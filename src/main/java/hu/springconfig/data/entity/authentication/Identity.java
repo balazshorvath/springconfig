@@ -8,10 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simple class for Authentication and Authorization.
@@ -40,6 +37,12 @@ public class Identity implements UserDetails {
     private String email;
     @JsonIgnore
     private String password;
+    /**
+     * This value (if set) shows the time, when something important
+     * changed in the identity's data.
+     * Tokens acquired before this, should be handled as expired.
+     */
+    private Date tokenExpiration;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "identity_roles",

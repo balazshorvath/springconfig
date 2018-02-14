@@ -102,21 +102,27 @@ databaseChangeLog {
     }
 
     changeSet(id: 'default-roles', author: 'balazs_horvath') {
-        loadData(tableName: 'roles', file: 'defaults/roles.csv', encoding: 'UTF8') {
-            column(name: 'id', header: 'id', type: 'INT')
-            column(name: 'role', index: 'role', type: 'VARCHAR(255)')
+        loadData(tableName: 'role', file: 'db/defaults/roles.csv', encoding: 'UTF8') {
+            column(name: 'id', header: 'id', type: 'NUMERIC')
+            column(name: 'role', header: 'role', type: 'STRING')
         }
     }
     changeSet(id: 'default-privileges', author: 'balazs_horvath') {
-        loadData(tableName: 'roles', file: 'defaults/privileges.csv', encoding: 'UTF8') {
-            column(name: 'id', header: 'id', type: 'INT')
-            column(name: 'privilege', index: 'privilege', type: 'VARCHAR(255)')
+        loadData(tableName: 'privilege', file: 'db/defaults/privileges.csv', encoding: 'UTF8') {
+            column(name: 'id', header: 'id', type: 'NUMERIC')
+            column(name: 'privilege', header: 'privilege', type: 'STRING')
         }
     }
     changeSet(id: 'default-role_privileges', author: 'balazs_horvath') {
-        loadData(tableName: 'role_privileges', file: 'defaults/role_privileges.csv', encoding: 'UTF8') {
-            column(name: 'role_id', header: 'role_id', type: 'INT')
-            column(name: 'privilege_id', index: 'privilege_id', type: 'INT')
+        loadData(tableName: 'role_privileges', file: 'db/defaults/role_privileges.csv', encoding: 'UTF8') {
+            column(name: 'role_id', header: 'role_id', type: 'NUMERIC')
+            column(name: 'privilege_id', header: 'privilege_id', type: 'NUMERIC')
+        }
+    }
+
+    changeSet(id: 'identity-token-expiration', author: 'balazs_horvath'){
+        addColumn(tableName: 'identity'){
+            column(name: 'token_expiration', type: 'DATETIME')
         }
     }
 }

@@ -52,6 +52,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         //.userDetailsService(userDetailsService)
         //.passwordEncoder(bCryptPasswordEncoder)
     }
+
 //    @Bean
 //    public AuthenticationEntryPoint unauthorizedEntryPoint() {
 //        return (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED);

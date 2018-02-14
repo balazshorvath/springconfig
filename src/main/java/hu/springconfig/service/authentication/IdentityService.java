@@ -1,22 +1,28 @@
 package hu.springconfig.service.authentication;
 
+import hu.springconfig.config.message.MessageProvider;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
+import hu.springconfig.data.validator.IdentityValidator;
 import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.base.LoggingComponent;
+import hu.springconfig.service.mail.MailingService;
 import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
 
 @Service
@@ -24,7 +30,15 @@ public class IdentityService extends LoggingComponent {
     @Autowired
     private IIdentityRepository identityRepository;
     @Autowired
+    private RoleService roleService;
+    @Autowired
     private PasswordEncoder encoder;
+    @Autowired
+    private MailingService mailingService;
+    @Autowired
+    private MessageProvider messageProvider;
+    @Autowired
+    private IdentityValidator validator;
 
 
     public Identity grantRoles(Identity current, Long id, Set<Role> roles) {
@@ -54,38 +68,39 @@ public class IdentityService extends LoggingComponent {
         return identityRepository.save(denyFrom);
     }
 
-    public Identity changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {
+    public void changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {
         current = get(current.getId());
         checkPassword(current, oldPassword);
-        checkPasswordValidity(newPassword, newConfirm);
+        validator.validatePasswordConfirm(newPassword, newConfirm);
         current.setPassword(encoder.encode(newPassword));
-        return identityRepository.save(current);
+        identityRepository.save(current);
     }
 
-    public Identity changeEmailSelf(Identity current, String password, String newEmail) {
+    public void changeEmailSelf(Identity current, String password, String newEmail) {
         current = get(current.getId());
         checkPassword(current, password);
-        // You just cannot validate emails.
-        if (!Util.notNullAndNotEmpty(newEmail)) {
-            throw new BadRequestException("validation.email.empty");
-        }
+        validator.validateEmail(newEmail);
         current.setEmail(newEmail);
-        return identityRepository.save(current);
+        identityRepository.save(current);
     }
 
-    public Identity changeUsernameSelf(Identity current, String password, String newUsername) {
+    public void changeUsernameSelf(Identity current, String password, String newUsername) {
         current = get(current.getId());
         checkPassword(current, password);
-        // You just cannot validate emails.
-        if (!Util.notNullAndNotEmpty(newUsername)) {
-            throw new BadRequestException("validation.username.empty");
-        }
+        validator.validateUsername(newUsername);
         current.setUsername(newUsername);
-        return identityRepository.save(current);
+        identityRepository.save(current);
     }
 
-    public Identity resetPassword(Identity current) {
-        throw new UnsupportedOperationException("resetPassword is not yet implemented");
+    public void resetPassword(Identity current) {
+        current = get(current.getId());
+        String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
+        String msg = messageProvider.getMessage("mail.password_reset.text", newPassword);
+        String subject = messageProvider.getMessage("mail.password_reset.subject");
+        current.setPassword(encoder.encode(newPassword));
+        current.setTokenExpiration(new Date());
+        mailingService.sendMail(current.getEmail(), subject, msg);
+        identityRepository.save(current);
     }
 
     public Identity updateIdentity(Identity current, Long id, String username, String email) {
@@ -93,11 +108,13 @@ public class IdentityService extends LoggingComponent {
         if (identity.isSuperiorTo(current)) {
             throw new AccessDeniedException("identity.low_rank");
         }
-        if (Util.notNullAndNotEmpty(username)) {
+        if (username != null) {
+            validator.validateUsername(username);
             identity.setUsername(username);
         }
-        if (Util.notNullAndNotEmpty(email)) {
-            identity.setUsername(email);
+        if (email != null) {
+            validator.validateUsername(email);
+            identity.setEmail(email);
         }
         return identityRepository.save(identity);
     }
@@ -110,8 +127,14 @@ public class IdentityService extends LoggingComponent {
         return identity;
     }
 
-    public Identity createIdentity(Identity identity, String password, String passwordConfirm) {
-        checkPasswordValidity(password, passwordConfirm);
+    public Identity createIdentity(String username, String email, String password, String passwordConfirm) {
+        validator.validatePasswordConfirm(password, passwordConfirm);
+        validator.validateEmail(email);
+        validator.validateUsername(username);
+        Identity identity = new Identity();
+        identity.setUsername(username);
+        identity.setEmail(email);
+        identity.setRoles(Collections.singleton(roleService.get(RoleService.USER_ROLE_ID)));
         identity.setPassword(encoder.encode(password));
         return identityRepository.save(identity);
     }
@@ -128,16 +151,9 @@ public class IdentityService extends LoggingComponent {
         return identityRepository.findByUsername(username);
     }
 
-    public void checkPassword(Identity identity, String password) {
+    private void checkPassword(Identity identity, String password) {
         if (!Util.notNullAndNotEmpty(password) || !encoder.matches(password, identity.getPassword())) {
             throw new ForbiddenException("identity.check_password_failed");
-        }
-    }
-
-    public void checkPasswordValidity(String password, String passwordConfirm) {
-        if (!Util.notNullAndNotEmpty(password) || !Util.notNullAndNotEmpty(passwordConfirm)
-                || !password.equals(passwordConfirm)) {
-            throw new BadRequestException("validation.password.confirm.mismatch");
         }
     }
 

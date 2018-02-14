@@ -3,6 +3,9 @@ package hu.springconfig.config.security.authentication.filter;
 import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.entity.authentication.Identity;
+import hu.springconfig.service.base.LoggingComponent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +22,9 @@ import java.io.IOException;
  * Authorizes requests.
  * Uses {@link JWTTokenParser} to extract and validate JWT token.
  */
-public class JWTAuthorizationFilter extends BasicAuthenticationFilter  {
+public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private JWTTokenParser tokenParser;
 
     public JWTAuthorizationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser) {
@@ -31,11 +36,11 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter  {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         Identity identity = tokenParser.parseToken(request);
+        log.debug("Token parsed: {}", identity);
         if(identity != null){
             Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         chain.doFilter(request, response);
-
     }
 }
