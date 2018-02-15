@@ -20,11 +20,10 @@ sourceCompatibility = 1.8
 liquibase {
     activities {
         main {
-            // TODO: replace with variables
-            changeLogFile 'src/main/resources/db/liquibase-main.groovy'
-            url 'jdbc:postgresql://localhost/TestApplication'
-            username 'postgres'
-            password 'root'
+            changeLogFile lbChangeLogFile
+            url lbURL
+            username lbUsername
+            password lbPassword
         }
     }
 }

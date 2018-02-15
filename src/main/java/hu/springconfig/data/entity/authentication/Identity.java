@@ -1,6 +1,7 @@
 package hu.springconfig.data.entity.authentication;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import hu.springconfig.util.Util;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -66,12 +67,12 @@ public class Identity implements UserDetails {
      */
     public boolean isSuperiorTo(Identity identity) {
         Role max = identity.getHighestRole();
-        if (max == null && this.roles != null) {
+        if (max == null) {
             // Identity has no roles, cannot be superior to anyone.
-            return true;
+            return Util.notNullAndNotEmpty(this.roles);
         }
         // does "this" have any role, which is higher, than the maximum of the parameter's?
-        return this.roles != null && this.roles.stream().anyMatch(
+        return this.roles.stream().anyMatch(
                 role -> role.getId() > max.getId()
         );
     }

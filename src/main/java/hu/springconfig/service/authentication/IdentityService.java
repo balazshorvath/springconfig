@@ -6,7 +6,6 @@ import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.validator.IdentityValidator;
-import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.base.LoggingComponent;
@@ -14,7 +13,6 @@ import hu.springconfig.service.mail.MailingService;
 import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -64,12 +62,16 @@ public class IdentityService extends LoggingComponent {
             /* Current user is not allowed to update user, because the target has a higher rank. */
             throw new AccessDeniedException("identity.low_rank");
         }
+        Role highest = current.getHighestRole();
+        if (roles.stream().anyMatch(role -> role.getId() > highest.getId())) {
+            /* Cannot deny roles higher, than own rank. */
+            throw new AccessDeniedException("identity.low_rank");
+        }
         denyFrom.getRoles().removeAll(roles);
         return identityRepository.save(denyFrom);
     }
 
     public void changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {
-        current = get(current.getId());
         checkPassword(current, oldPassword);
         validator.validatePasswordConfirm(newPassword, newConfirm);
         current.setPassword(encoder.encode(newPassword));
@@ -77,7 +79,6 @@ public class IdentityService extends LoggingComponent {
     }
 
     public void changeEmailSelf(Identity current, String password, String newEmail) {
-        current = get(current.getId());
         checkPassword(current, password);
         validator.validateEmail(newEmail);
         current.setEmail(newEmail);
@@ -85,7 +86,6 @@ public class IdentityService extends LoggingComponent {
     }
 
     public void changeUsernameSelf(Identity current, String password, String newUsername) {
-        current = get(current.getId());
         checkPassword(current, password);
         validator.validateUsername(newUsername);
         current.setUsername(newUsername);
@@ -93,7 +93,6 @@ public class IdentityService extends LoggingComponent {
     }
 
     public void resetPassword(Identity current) {
-        current = get(current.getId());
         String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
         String msg = messageProvider.getMessage("mail.password_reset.text", newPassword);
         String subject = messageProvider.getMessage("mail.password_reset.subject");

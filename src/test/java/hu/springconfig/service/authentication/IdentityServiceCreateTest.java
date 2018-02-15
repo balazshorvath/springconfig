@@ -1,19 +1,14 @@
 package hu.springconfig.service.authentication;
 
-import hu.springconfig.Application;
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
-import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.exception.BadRequestException;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -27,8 +22,6 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class IdentityServiceCreateTest extends TestBase {
-    @MockBean
-    private IIdentityRepository identityRepository;
     @Autowired
     private IdentityService identityService;
     @Autowired
@@ -62,12 +55,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.username.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreateUsernameInvalidTooLong() {
         final String username = "qweiquoijqowieqjdlwknclabcjawudbawéoidaugvwféaudhfsoehflsuebvlisuevhsef";
@@ -77,12 +71,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.username.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreateUsernameInvalidTooShort() {
         final String username = "s1";
@@ -92,12 +87,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.username.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreateUsernameInvalidSpecialCharacter() {
         final String username = "user'asd";
@@ -107,12 +103,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.username.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreateEmailInvalid() {
         final String username = "user";
@@ -122,12 +119,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.email.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreateEmailInvalidTooShort() {
         final String username = "s2351";
@@ -137,12 +135,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.email.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreateEmailInvalidTooLong() {
         final String username = "s2351";
@@ -152,12 +151,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.email.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreatePasswordInvalid() {
         final String username = "user";
@@ -167,12 +167,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.password.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreatePasswordInvalidTooShort() {
         final String username = "s2351";
@@ -182,12 +183,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.password.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreatePasswordInvalidTooLong() {
         final String username = "1337h4x0r";
@@ -197,12 +199,13 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, password);
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.password.invalid", exception.getMessage());
     }
+
     @Test
     public void testCreatePasswordConfirmInvalid() {
         final String username = "user";
@@ -212,7 +215,7 @@ public class IdentityServiceCreateTest extends TestBase {
         BadRequestException exception = null;
         try {
             identityService.createIdentity(username, email, password, "asdasd");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
