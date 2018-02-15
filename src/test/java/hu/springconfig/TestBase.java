@@ -21,8 +21,7 @@ public class TestBase {
 
     @Before
     public void setup(){
-        Set<Privilege> adminPrivileges = (Arrays.asList(Privilege.Privileges.values()))
-                .stream().map(Privilege::new).collect(Collectors.toSet());
+        Set<Privilege> adminPrivileges = Arrays.stream(Privilege.Privileges.values()).map(Privilege::new).collect(Collectors.toSet());
 
         adminRole.setId(RoleService.ADMIN_ROLE_ID);
         adminRole.setPrivileges(adminPrivileges);

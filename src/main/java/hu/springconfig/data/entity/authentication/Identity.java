@@ -66,20 +66,20 @@ public class Identity implements UserDetails {
      */
     public boolean isSuperiorTo(Identity identity) {
         Role max = identity.getHighestRole();
-        if (max == null) {
+        if (max == null && this.roles != null) {
             // Identity has no roles, cannot be superior to anyone.
             return true;
         }
         // does "this" have any role, which is higher, than the maximum of the parameter's?
-        return this.roles.stream().anyMatch(
+        return this.roles != null && this.roles.stream().anyMatch(
                 role -> role.getId() > max.getId()
         );
     }
 
     @JsonIgnore
     public Role getHighestRole() {
-        return this.roles.stream().max(Comparator.comparingInt(Role::getId))
-                .orElse(null);
+        return this.roles == null
+                ? null : this.roles.stream().max(Comparator.comparingInt(Role::getId)).orElse(null);
     }
 
     @JsonIgnore
