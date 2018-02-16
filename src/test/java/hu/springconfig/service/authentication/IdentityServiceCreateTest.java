@@ -9,11 +9,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Collections;
-import java.util.Set;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,9 +21,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class IdentityServiceCreateTest extends TestBase {
     @Autowired
-    private IdentityService identityService;
-    @Autowired
-    private BCryptPasswordEncoder encoder;
+    private IdentityService underTest;
 
     /* CREATE TESTS */
 
@@ -42,7 +38,7 @@ public class IdentityServiceCreateTest extends TestBase {
             return identity;
         });
 
-        Identity created = identityService.createIdentity(username, email, password, password);
+        Identity created = underTest.createIdentity(username, email, password, password);
         assertIdentity(created, userId, username, email, password, Collections.singleton(userRole));
     }
 
@@ -54,7 +50,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -70,7 +66,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -86,7 +82,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -102,7 +98,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -118,7 +114,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -134,7 +130,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -150,7 +146,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -166,7 +162,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -182,7 +178,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -198,7 +194,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, password);
+            underTest.createIdentity(username, email, password, password);
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -214,7 +210,7 @@ public class IdentityServiceCreateTest extends TestBase {
 
         BadRequestException exception = null;
         try {
-            identityService.createIdentity(username, email, password, "asdasd");
+            underTest.createIdentity(username, email, password, "asdasd");
         } catch (BadRequestException e) {
             exception = e;
         }
@@ -222,11 +218,4 @@ public class IdentityServiceCreateTest extends TestBase {
         assertEquals("identity.password.confirm.mismatch", exception.getMessage());
     }
 
-    private void assertIdentity(Identity identity, Long id, String username, String email, String password, Set<Role> roles) {
-        assertEquals(id, identity.getId());
-        assertEquals(username, identity.getUsername());
-        assertEquals(email, identity.getEmail());
-        assertEquals(roles, identity.getRoles());
-        assertTrue(encoder.matches(password, identity.getPassword()));
-    }
 }

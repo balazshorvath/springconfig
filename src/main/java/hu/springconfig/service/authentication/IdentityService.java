@@ -107,12 +107,12 @@ public class IdentityService extends LoggingComponent {
         if (identity.isSuperiorTo(current)) {
             throw new AccessDeniedException("identity.low_rank");
         }
-        if (username != null) {
+        if (Util.notNullAndNotEmpty(username)) {
             validator.validateUsername(username);
             identity.setUsername(username);
         }
-        if (email != null) {
-            validator.validateUsername(email);
+        if (Util.notNullAndNotEmpty(email)) {
+            validator.validateEmail(email);
             identity.setEmail(email);
         }
         return identityRepository.save(identity);

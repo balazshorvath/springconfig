@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 public class TestBase {
@@ -62,9 +64,16 @@ public class TestBase {
 
     protected void mockIdentityDatabase(Identity... identities) {
         for (Identity identity : identities) {
-            when(identityRepository.findOne(identity.getId())).thenReturn(identity);
-//            when(identityRepository.findByUsername(identity.getUsername())).thenReturn(identity);
+            when(identityRepository.findOne(identity.getId())).thenReturn(new Identity(identity));
         }
+    }
+
+    protected void assertIdentity(Identity identity, Long id, String username, String email, String password, Set<Role> roles) {
+        assertEquals(id, identity.getId());
+        assertEquals(username, identity.getUsername());
+        assertEquals(email, identity.getEmail());
+        assertEquals(roles, identity.getRoles());
+        assertTrue(encoder.matches(password, identity.getPassword()));
     }
 
 }

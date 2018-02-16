@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class IdentityServiceRolesTest extends TestBase {
     @Autowired
-    private IdentityService identityService;
+    private IdentityService underTest;
 
     private Role managerLvl1;
     private Role managerLvl2;
@@ -44,13 +44,6 @@ public class IdentityServiceRolesTest extends TestBase {
 
         when(identityRepository.save(any(Identity.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
-/*
-*
-        Identity manager1 = createIdentity(managerLvl1);
-        Identity manager2 = createIdentity(managerLvl2);
-        Identity user = createIdentity(userRole);
-        Identity admin = createIdentity(adminRole);
-*/
 
     @Test
     public void testDeny() {
@@ -59,12 +52,12 @@ public class IdentityServiceRolesTest extends TestBase {
         Identity manager2 = createIdentity(22L, managerLvl2);
         mockIdentityDatabase(user, manager1);
 
-        Identity updated = identityService.denyRoles(manager1, user.getId(), Collections.singleton(userRole));
+        Identity updated = underTest.denyRoles(manager1, user.getId(), Collections.singleton(userRole));
 
         assertNotNull(updated);
         assertTrue(updated.getRoles().isEmpty());
 
-        updated = identityService.denyRoles(manager2, manager1.getId(), Collections.singleton(managerLvl1));
+        updated = underTest.denyRoles(manager2, manager1.getId(), Collections.singleton(managerLvl1));
 
         assertNotNull(updated);
         assertTrue(updated.getRoles().contains(userRole));
@@ -80,7 +73,7 @@ public class IdentityServiceRolesTest extends TestBase {
         AccessDeniedException exception = null;
         // Identity tries to deny a role higher, than it's roles
         try {
-            identityService.denyRoles(manager1, user.getId(), Collections.singleton(managerLvl2));
+            underTest.denyRoles(manager1, user.getId(), Collections.singleton(managerLvl2));
         } catch (AccessDeniedException e) {
             exception = e;
         }
@@ -89,7 +82,7 @@ public class IdentityServiceRolesTest extends TestBase {
         exception = null;
         // Identity tries to deny a role from an identity with higher rank
         try {
-            identityService.denyRoles(manager1, manager2.getId(), Collections.singleton(managerLvl1));
+            underTest.denyRoles(manager1, manager2.getId(), Collections.singleton(managerLvl1));
         } catch (AccessDeniedException e) {
             exception = e;
         }
@@ -105,13 +98,13 @@ public class IdentityServiceRolesTest extends TestBase {
         Identity manager2 = createIdentity(22L, managerLvl2);
         mockIdentityDatabase(user, manager1);
 
-        Identity updated = identityService.grantRoles(manager1, user.getId(), Collections.singleton(managerLvl1));
+        Identity updated = underTest.grantRoles(manager1, user.getId(), Collections.singleton(managerLvl1));
 
         assertNotNull(updated);
         assertTrue(updated.getRoles().contains(userRole));
         assertTrue(updated.getRoles().contains(managerLvl1));
 
-        updated = identityService.grantRoles(manager2, manager1.getId(), Collections.singleton(managerLvl2));
+        updated = underTest.grantRoles(manager2, manager1.getId(), Collections.singleton(managerLvl2));
 
         assertNotNull(updated);
         assertTrue(updated.getRoles().contains(managerLvl1));
@@ -128,7 +121,7 @@ public class IdentityServiceRolesTest extends TestBase {
         AccessDeniedException exception = null;
         // Identity tries to grant a role higher, than it's roles
         try {
-            identityService.grantRoles(manager1, user.getId(), Collections.singleton(managerLvl2));
+            underTest.grantRoles(manager1, user.getId(), Collections.singleton(managerLvl2));
         } catch (AccessDeniedException e) {
             exception = e;
         }
@@ -137,7 +130,7 @@ public class IdentityServiceRolesTest extends TestBase {
         exception = null;
         // Identity tries to grant a role to an identity with higher rank
         try {
-            identityService.grantRoles(manager1, manager2.getId(), Collections.singleton(managerLvl1));
+            underTest.grantRoles(manager1, manager2.getId(), Collections.singleton(managerLvl1));
         } catch (AccessDeniedException e) {
             exception = e;
         }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import hu.springconfig.util.Util;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +19,7 @@ import java.util.*;
  * TODO: implement locking, password expiration
  */
 @Data
+@NoArgsConstructor
 @Entity
 @Table(
         name = "Identity",
@@ -57,6 +59,16 @@ public class Identity implements UserDetails {
     private Set<Role> roles;
     @Version
     private long version;
+
+    public Identity(Identity identity) {
+        this.id = identity.id;
+        this.username = identity.username;
+        this.email = identity.email;
+        this.password = identity.password;
+        this.tokenExpiration = identity.tokenExpiration;
+        this.roles = identity.roles == null ? null : new HashSet<>(identity.roles);
+        this.version = identity.version;
+    }
 
     /**
      * True, if this {@link Identity} is superior to the one in the parameter,
