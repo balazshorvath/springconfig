@@ -50,6 +50,8 @@ public class Role {
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore
     private Set<Identity> identities;
+    @Version
+    private long version;
 
     public Collection<? extends GrantedAuthority> createGrantedAuthorities() {
         Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(Collectors.toList());

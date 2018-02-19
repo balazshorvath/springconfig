@@ -9,12 +9,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class ApplicationConfig {
     @Bean
-    public ObjectMapper objectMapper(){
+    public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

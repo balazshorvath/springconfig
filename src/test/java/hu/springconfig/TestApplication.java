@@ -18,22 +18,22 @@ import static org.mockito.Mockito.mock;
 public class TestApplication {
 
     @Bean
-    public MailingService mailingService(){
+    public MailingService mailingService() {
         return mock(MailingService.class);
     }
 
     @Bean
-    public JavaMailSender javaMailSender(){
+    public JavaMailSender javaMailSender() {
         return mock(JavaMailSender.class);
     }
 
     @Bean
-    public ObjectMapper objectMapper(){
+    public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
