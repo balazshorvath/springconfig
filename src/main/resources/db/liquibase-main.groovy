@@ -39,6 +39,9 @@ databaseChangeLog {
                 constraints(nullable: false)
             }
             column(name: 'role', type: 'VARCHAR(255)')
+            column(name: 'version', type: 'BIGINT') {
+                constraints(nullable: false)
+            }
         }
     }
 
@@ -105,6 +108,7 @@ databaseChangeLog {
         loadData(tableName: 'role', file: 'db/defaults/roles.csv', encoding: 'UTF8') {
             column(name: 'id', header: 'id', type: 'NUMERIC')
             column(name: 'role', header: 'role', type: 'STRING')
+            column(name: 'version', header: 'version', type: 'NUMERIC')
         }
     }
     changeSet(id: 'default-privileges', author: 'balazs_horvath') {
@@ -120,8 +124,8 @@ databaseChangeLog {
         }
     }
 
-    changeSet(id: 'identity-token-expiration', author: 'balazs_horvath'){
-        addColumn(tableName: 'identity'){
+    changeSet(id: 'identity-token-expiration', author: 'balazs_horvath') {
+        addColumn(tableName: 'identity') {
             column(name: 'token_expiration', type: 'DATETIME')
         }
     }

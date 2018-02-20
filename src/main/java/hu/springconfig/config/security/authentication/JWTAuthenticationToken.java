@@ -10,7 +10,6 @@ import java.util.Collection;
 /**
  * Credentials contains the type {@link hu.springconfig.data.dto.authentication.Credentials}
  * Principal contains the type {@link hu.springconfig.data.entity.authentication.Identity}
- *
  */
 public class JWTAuthenticationToken extends AbstractAuthenticationToken {
     private Identity principal;
@@ -39,7 +38,7 @@ public class JWTAuthenticationToken extends AbstractAuthenticationToken {
 
     @Override
     public void eraseCredentials() {
-        if(credentials != null) {
+        if (credentials != null) {
             this.credentials.eraseCredentials();
         }
     }
