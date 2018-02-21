@@ -1,9 +1,8 @@
 package hu.springconfig.controller;
 
-import hu.springconfig.data.dto.authentication.RoleCreate;
-import hu.springconfig.data.dto.authentication.RoleUpdate;
+import hu.springconfig.data.dto.authentication.role.RoleCreate;
+import hu.springconfig.data.dto.authentication.role.RoleUpdate;
 import hu.springconfig.data.dto.simple.OKResponse;
-import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;

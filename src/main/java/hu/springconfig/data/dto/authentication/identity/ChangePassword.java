@@ -1,4 +1,4 @@
-package hu.springconfig.data.dto.authentication;
+package hu.springconfig.data.dto.authentication.identity;
 
 import lombok.Data;
 

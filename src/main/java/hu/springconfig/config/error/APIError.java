@@ -15,7 +15,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class APIError {
     private String message;
-    private HttpStatus status;
+    private Integer status;
     @JsonFormat(pattern = DateFormat.DATE_TIME_24H_FORMAT)
     private Date when;
     private Class<? extends ResponseException> exception;

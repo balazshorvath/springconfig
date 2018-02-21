@@ -1,4 +1,4 @@
-package hu.springconfig.data.dto.authentication;
+package hu.springconfig.data.dto.authentication.role;
 
 import lombok.Data;
 
@@ -8,8 +8,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 @Data
-public class RoleCreate {
-    @NotNull
+public class RoleUpdate {
     @Min(1)
     @Max(1000)
     private Integer id;
@@ -17,4 +16,6 @@ public class RoleCreate {
     private String role;
     @NotNull
     private Set<Integer> privileges;
+    @NotNull
+    private Long version;
 }

@@ -1,16 +1,15 @@
 package hu.springconfig.config.security.authentication;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
-import hu.springconfig.data.repository.authentication.IRoleRepository;
 import hu.springconfig.exception.InvalidTokenException;
-import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.base.LoggingComponent;
 import hu.springconfig.util.Util;
 import io.jsonwebtoken.*;
 import lombok.Data;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -21,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Set;
 
 /**
  * JWT parse logic implementation.
@@ -38,6 +36,8 @@ public class JWTTokenParser extends LoggingComponent {
     private IIdentityRepository identityRepository;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private ModelMapper modelMapper;
 
     public void createAndSetToken(HttpServletResponse response, Identity identity) {
         Claims claims = Jwts.claims()
@@ -50,7 +50,7 @@ public class JWTTokenParser extends LoggingComponent {
             response.setContentType("application/json");
 
             TokenResponse response1 = new TokenResponse();
-            response1.identity = identity;
+            response1.identity = modelMapper.map(identity, IdentityDTO.class);
             response1.token = Jwts.builder()
                             .setClaims(claims)
                             .signWith(SignatureAlgorithm.HS512, signatureSecret)
@@ -96,6 +96,6 @@ public class JWTTokenParser extends LoggingComponent {
     @Data
     public static class TokenResponse {
         private String token;
-        private Identity identity;
+        private IdentityDTO identity;
     }
 }

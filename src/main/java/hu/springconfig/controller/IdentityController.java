@@ -1,14 +1,16 @@
 package hu.springconfig.controller;
 
-import hu.springconfig.data.dto.authentication.ChangePassword;
-import hu.springconfig.data.dto.authentication.IdentityCreate;
-import hu.springconfig.data.dto.authentication.IdentityUpdate;
+import hu.springconfig.data.dto.authentication.identity.ChangePassword;
+import hu.springconfig.data.dto.authentication.identity.IdentityCreate;
+import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
+import hu.springconfig.data.dto.authentication.identity.IdentityUpdate;
 import hu.springconfig.data.dto.authentication.SecuredUpdate;
 import hu.springconfig.data.dto.simple.OKResponse;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.authentication.RoleService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.Set;
 
 @RestController
@@ -25,6 +26,8 @@ public class IdentityController {
     private IdentityService identityService;
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private ModelMapper modelMapper;
 
     /* Standard user features */
 
@@ -63,26 +66,38 @@ public class IdentityController {
 
     @PreAuthorize("hasAuthority('IDENTITY_GRANT')")
     @PostMapping("/auth/{id}/grant")
-    public Identity grant(@PathVariable Long id, @RequestBody Set<Integer> roleIds, Authentication authentication) {
-        return identityService.grantRoles((Identity) authentication.getPrincipal(), id, roleService.getRoles(roleIds));
+    public IdentityDTO grant(@PathVariable Long id, @RequestBody Set<Integer> roleIds, Authentication authentication) {
+        return modelMapper.map(
+                identityService.grantRoles((Identity) authentication.getPrincipal(), id, roleService.getRoles(roleIds)),
+                IdentityDTO.class
+        );
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_DENY')")
     @PostMapping("/auth/{id}/deny")
-    public Identity deny(@PathVariable Long id, @RequestBody Set<Integer> roleIds, Authentication authentication) {
-        return identityService.denyRoles((Identity) authentication.getPrincipal(), id, roleService.getRoles(roleIds));
+    public IdentityDTO deny(@PathVariable Long id, @RequestBody Set<Integer> roleIds, Authentication authentication) {
+        return modelMapper.map(
+                identityService.denyRoles((Identity) authentication.getPrincipal(), id, roleService.getRoles(roleIds)),
+                IdentityDTO.class
+        );
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_GET') || @identityAuthorization.isSelf(authentication, #id)")
     @GetMapping("/auth/{id}")
-    public Identity get(@PathVariable Long id) {
-        return identityService.get(id);
+    public IdentityDTO get(@PathVariable Long id) {
+        return modelMapper.map(
+                identityService.get(id),
+                IdentityDTO.class
+        );
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_UPDATE')")
     @PutMapping("/auth/{id}")
-    public Identity put(@PathVariable Long id, @RequestBody IdentityUpdate update, Authentication authentication) {
-        return identityService.updateIdentity((Identity) authentication.getPrincipal(), id, update.getUsername(), update.getEmail());
+    public IdentityDTO put(@PathVariable Long id, @RequestBody IdentityUpdate update, Authentication authentication) {
+        return modelMapper.map(
+                identityService.updateIdentity((Identity) authentication.getPrincipal(), id, update.getUsername(), update.getEmail()),
+                IdentityDTO.class
+        );
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_DELETE')")
@@ -94,8 +109,8 @@ public class IdentityController {
 
     @PreAuthorize("hasAuthority('IDENTITY_LIST')")
     @PostMapping("/auth/list")
-    public Page<Identity> list(@RequestBody Condition condition, Pageable pageable) {
-        return identityService.list(condition, pageable);
+    public Page<IdentityDTO> list(@RequestBody Condition condition, Pageable pageable) {
+        return identityService.list(condition, pageable).map(source -> modelMapper.map(source, IdentityDTO.class));
     }
 
 }
