@@ -5,13 +5,13 @@ import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
+import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -46,30 +46,29 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
-    public Role delete(Identity current, Integer roleId) {
+    public Role delete(Integer roleId) {
         Role role = get(roleId);
         if (USER_ROLE_ID.equals(roleId) || ADMIN_ROLE_ID.equals(roleId)) {
-            throw new AccessDeniedException("role.static_delete");
-        }
-        if (current.getHighestRole().getId() < roleId) {
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("role.static_delete");
         }
         return role;
     }
 
     @Transactional
-    public Role update(Identity current, Integer id, Integer newId, String roleName, Set<Privilege> privileges, long version) {
-        Integer highest = current.getHighestRole().getId();
-        if (highest <= id && newId <= highest) {
-            throw new AccessDeniedException("identity.low_rank");
-        }
+    public Role update(Integer id, Integer newId, String roleName, Set<Privilege> privileges, long version) {
         Role role = get(id);
         role.setVersion(version);
         if (newId != null) {
-            role = delete(current, id);
+            if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {
+                throw new ForbiddenException("role.id.static");
+            }
+            role = delete(id);
             role.setId(id);
         }
         if (Util.notNullAndNotEmpty(roleName)) {
+            if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {
+                throw new ForbiddenException("role.role_name.static");
+            }
             role.setRole(roleName);
         }
         if (Util.notNullAndNotEmpty(privileges)) {

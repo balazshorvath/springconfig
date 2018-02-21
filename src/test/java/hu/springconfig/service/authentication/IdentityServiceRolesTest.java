@@ -4,12 +4,12 @@ import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.exception.ForbiddenException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Collections;
@@ -70,11 +70,11 @@ public class IdentityServiceRolesTest extends TestBase {
         Identity manager2 = createIdentity(22L, managerLvl1, managerLvl2);
         mockIdentityDatabase(user, manager1, manager2);
 
-        AccessDeniedException exception = null;
+        ForbiddenException exception = null;
         // Identity tries to deny a role higher, than it's roles
         try {
             underTest.denyRoles(manager1, user.getId(), Collections.singleton(managerLvl2));
-        } catch (AccessDeniedException e) {
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -83,7 +83,7 @@ public class IdentityServiceRolesTest extends TestBase {
         // Identity tries to deny a role from an identity with higher rank
         try {
             underTest.denyRoles(manager1, manager2.getId(), Collections.singleton(managerLvl1));
-        } catch (AccessDeniedException e) {
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -118,11 +118,11 @@ public class IdentityServiceRolesTest extends TestBase {
         Identity manager2 = createIdentity(22L, managerLvl2);
         mockIdentityDatabase(user, manager1, manager2);
 
-        AccessDeniedException exception = null;
+        ForbiddenException exception = null;
         // Identity tries to grant a role higher, than it's roles
         try {
             underTest.grantRoles(manager1, user.getId(), Collections.singleton(managerLvl2));
-        } catch (AccessDeniedException e) {
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -131,7 +131,7 @@ public class IdentityServiceRolesTest extends TestBase {
         // Identity tries to grant a role to an identity with higher rank
         try {
             underTest.grantRoles(manager1, manager2.getId(), Collections.singleton(managerLvl1));
-        } catch (AccessDeniedException e) {
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);

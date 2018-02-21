@@ -42,10 +42,7 @@ public class Privilege {
         IDENTITY_UPDATE(3),
         IDENTITY_GRANT(4),
         IDENTITY_DENY(5),
-        IDENTITY_DELETE(6),
-        ROLE_GET(7),
-        ROLE_LIST(8),
-        ROLE_UPDATE(9);
+        IDENTITY_DELETE(6);
 
         private final Integer value;
 

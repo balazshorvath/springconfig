@@ -2,6 +2,7 @@ package hu.springconfig.controller;
 
 import hu.springconfig.data.dto.authentication.RoleCreate;
 import hu.springconfig.data.dto.authentication.RoleUpdate;
+import hu.springconfig.data.dto.simple.OKResponse;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
@@ -26,7 +27,7 @@ public class RoleController {
     @Autowired
     private IPrivilegeRepository privilegeRepository;
 
-    @PreAuthorize("hasAuthority('ROLE_CREATE')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/role")
     public Role create(@RequestBody @Valid RoleCreate create) {
         Set<Privilege> privileges = new HashSet<>();
@@ -34,21 +35,27 @@ public class RoleController {
         return roleService.create(create.getId(), create.getRole(), privileges);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_GET')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/role/{id}")
     public Role get(@PathVariable Integer id) {
         return roleService.get(id);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/role/{id}")
-    public Role put(@PathVariable Integer id, @RequestBody RoleUpdate update, Authentication authentication) {
+    public Role put(@PathVariable Integer id, @RequestBody RoleUpdate update) {
         Set<Privilege> privileges = new HashSet<>();
         privilegeRepository.findAll(update.getPrivileges()).forEach(privileges::add);
-        return roleService.update((Identity) authentication.getPrincipal(), id, update.getId(), update.getRole(), privileges, update.getVersion());
+        return roleService.update(id, update.getId(), update.getRole(), privileges, update.getVersion());
+    }
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/role/{id}")
+    public OKResponse delete(@PathVariable Integer id) {
+        roleService.delete(id);
+        return new OKResponse();
     }
 
-    @PreAuthorize("hasAuthority('ROLE_LIST')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/role/list")
     public Page<Role> list(@RequestBody Condition condition, Pageable pageable) {
         return roleService.list(condition, pageable);

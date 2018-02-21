@@ -15,7 +15,6 @@ import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,12 +43,12 @@ public class IdentityService extends LoggingComponent {
         // If the identity has higher ranks, than the current
         if (grantTo.isSuperiorTo(current)) {
             /* Current user is not allowed to update user, because the target has a higher rank. */
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("identity.low_rank");
         }
         Role highest = current.getHighestRole();
         if (roles.stream().anyMatch(role -> role.getId() > highest.getId())) {
             /* Cannot grant roles higher, than own rank. */
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("identity.low_rank");
         }
         grantTo.getRoles().addAll(roles);
         return identityRepository.save(grantTo);
@@ -60,52 +59,52 @@ public class IdentityService extends LoggingComponent {
         // If the identity has higher ranks, than the current
         if (denyFrom.isSuperiorTo(current)) {
             /* Current user is not allowed to update user, because the target has a higher rank. */
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("identity.low_rank");
         }
         Role highest = current.getHighestRole();
         if (roles.stream().anyMatch(role -> role.getId() > highest.getId())) {
             /* Cannot deny roles higher, than own rank. */
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("identity.low_rank");
         }
         denyFrom.getRoles().removeAll(roles);
         return identityRepository.save(denyFrom);
     }
 
-    public void changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {
+    public Identity changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {
         checkPassword(current, oldPassword);
         validator.validatePasswordConfirm(newPassword, newConfirm);
         current.setPassword(encoder.encode(newPassword));
-        identityRepository.save(current);
+        return identityRepository.save(current);
     }
 
-    public void changeEmailSelf(Identity current, String password, String newEmail) {
+    public Identity changeEmailSelf(Identity current, String password, String newEmail) {
         checkPassword(current, password);
         validator.validateEmail(newEmail);
         current.setEmail(newEmail);
-        identityRepository.save(current);
+        return identityRepository.save(current);
     }
 
-    public void changeUsernameSelf(Identity current, String password, String newUsername) {
+    public Identity changeUsernameSelf(Identity current, String password, String newUsername) {
         checkPassword(current, password);
         validator.validateUsername(newUsername);
         current.setUsername(newUsername);
-        identityRepository.save(current);
+        return identityRepository.save(current);
     }
 
-    public void resetPassword(Identity current) {
+    public Identity resetPassword(Identity current) {
         String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
         String msg = messageProvider.getMessage("mail.password_reset.text", newPassword);
         String subject = messageProvider.getMessage("mail.password_reset.subject");
         current.setPassword(encoder.encode(newPassword));
         current.setTokenExpiration(new Date());
         mailingService.sendMail(current.getEmail(), subject, msg);
-        identityRepository.save(current);
+        return identityRepository.save(current);
     }
 
     public Identity updateIdentity(Identity current, Long id, String username, String email) {
         Identity identity = get(id);
         if (identity.isSuperiorTo(current)) {
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("identity.low_rank");
         }
         if (Util.notNullAndNotEmpty(username)) {
             validator.validateUsername(username);
@@ -141,7 +140,7 @@ public class IdentityService extends LoggingComponent {
     public void delete(Identity current, Long id) {
         Identity identity = get(id);
         if (identity.isSuperiorTo(current)) {
-            throw new AccessDeniedException("identity.low_rank");
+            throw new ForbiddenException("identity.low_rank");
         }
         identityRepository.delete(id);
     }

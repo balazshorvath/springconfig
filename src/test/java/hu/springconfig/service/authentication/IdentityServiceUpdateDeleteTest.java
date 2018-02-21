@@ -4,6 +4,7 @@ import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.mail.MailingService;
 import org.junit.Test;
@@ -11,8 +12,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,48 +44,143 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     }
 
     @Test
-    public void testResetPassword(){
+    public void testDelete() {
+        underTest.delete(admin, user.getId());
+        verify(identityRepository, times(1)).delete(user.getId());
+    }
+
+    @Test
+    public void testDeleteAccessDenied() {
+        ForbiddenException exception = null;
+        try {
+            underTest.delete(user, admin.getId());
+        } catch (ForbiddenException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.low_rank", exception.getMessage());
+    }
+    @Test
+    public void testDeleteNotFound() {
+        NotFoundException exception = null;
+        try {
+            underTest.delete(admin, 10L);
+        } catch (NotFoundException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.not_found", exception.getMessage());
+    }
+
+    @Test
+    public void testResetPassword() {
         String oldPassword = user.getPassword();
-        underTest.resetPassword(user);
-        assertNotNull(user.getTokenExpiration());
-        assertNotEquals(oldPassword, user.getPassword());
-        verify(mailingService, times(1)).sendMail(user.getEmail(), "mail.password_reset.subject", "mail.password_reset.text");
+        Identity updated = underTest.resetPassword(user);
+        assertNotNull(updated.getTokenExpiration());
+        assertNotEquals(oldPassword, updated.getPassword());
+        verify(mailingService, times(1)).sendMail(updated.getEmail(), "mail.password_reset.subject", "mail.password_reset.text");
     }
+
     @Test
-    public void testChangePassword(){
-        fail("Not implemented");
+    public void testChangePassword() {
+        Identity updated = underTest.changePassword(user, "password", "newpassword", "newpassword");
+        assertIdentity(updated, 20L,  "user", "user@email", "newpassword", Collections.singleton(userRole));
     }
+
     @Test
-    public void testChangePasswordInvalid(){
-        fail("Not implemented");
+    public void testChangePasswordInvalid() {
+        BadRequestException exception = null;
+        try{
+            underTest.changePassword(user, "password", "ne", "ne");
+        }catch (BadRequestException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.password.invalid", exception.getMessage());
     }
+
     @Test
-    public void testChangePasswordForbidden(){
-        fail("Not implemented");
+    public void testChangePasswordConfirmInvalid() {
+        BadRequestException exception = null;
+        try{
+            underTest.changePassword(user, "password", "newp", "newpassword");
+        }catch (BadRequestException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.password.confirm.mismatch", exception.getMessage());
     }
+
     @Test
-    public void testChangeUsernameSelf(){
-        fail("Not implemented");
+    public void testChangePasswordForbidden() {
+        ForbiddenException exception = null;
+        try{
+            underTest.changePassword(user, "pord", "newpassword", "newpassword");
+        }catch (ForbiddenException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.check_password_failed", exception.getMessage());
     }
+
     @Test
-    public void testChangeUsernameSelfInvalid(){
-        fail("Not implemented");
+    public void testChangeUsernameSelf() {
+        Identity updated = underTest.changeUsernameSelf(user, "password", "username");
+        assertIdentity(updated, 20L,  "username", "user@email", "password", Collections.singleton(userRole));
     }
+
     @Test
-    public void testChangeUsernameSelfForbidden(){
-        fail("Not implemented");
+    public void testChangeUsernameSelfInvalid() {
+        BadRequestException exception = null;
+        try{
+            underTest.changeUsernameSelf(user, "password", "use+rname");
+        }catch (BadRequestException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.username.invalid", exception.getMessage());
     }
+
     @Test
-    public void testChangeEmailSelf(){
-        fail("Not implemented");
+    public void testChangeUsernameSelfForbidden() {
+        ForbiddenException exception = null;
+        try{
+            underTest.changeUsernameSelf(user, "password1", "username");
+        }catch (ForbiddenException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.check_password_failed", exception.getMessage());
     }
+
     @Test
-    public void testChangeEmailSelfInvalid(){
-        fail("Not implemented");
+    public void testChangeEmailSelf() {
+        Identity updated = underTest.changeEmailSelf(user, "password", "username@email");
+        assertIdentity(updated, 20L,  "user", "username@email", "password", Collections.singleton(userRole));
     }
+
     @Test
-    public void testChangeEmailSelfForbidden(){
-        fail("Not implemented");
+    public void testChangeEmailSelfInvalid() {
+        BadRequestException exception = null;
+        try{
+            underTest.changeEmailSelf(user, "password", "us");
+        }catch (BadRequestException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.email.invalid", exception.getMessage());
+    }
+
+    @Test
+    public void testChangeEmailSelfForbidden() {
+        ForbiddenException exception = null;
+        try{
+            underTest.changeEmailSelf(user, "password1", "username@email");
+        }catch (ForbiddenException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals("identity.check_password_failed", exception.getMessage());
     }
 
     @Test
@@ -96,15 +193,16 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testUpdateLowRank() {
-        AccessDeniedException exception = null;
+        ForbiddenException exception = null;
         try{
             underTest.updateIdentity(user, admin.getId(), "somethingelse", "");
-        }catch (AccessDeniedException e){
+        }catch (ForbiddenException e){
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.low_rank", exception.getMessage());
     }
+
     @Test
     public void testUpdateInvalidUsername() {
         BadRequestException exception = null;
@@ -116,6 +214,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertEquals("identity.username.invalid", exception.getMessage());
     }
+
     @Test
     public void testUpdateInvalidEmail() {
         BadRequestException exception = null;
@@ -127,6 +226,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertEquals("identity.email.invalid", exception.getMessage());
     }
+
     @Test
     public void testUpdateEntityDoesNotExist() {
         NotFoundException exception = null;
