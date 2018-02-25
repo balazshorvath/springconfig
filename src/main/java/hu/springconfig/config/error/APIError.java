@@ -6,7 +6,6 @@ import hu.springconfig.exception.ResponseException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 import java.util.Date;
 
@@ -20,4 +19,12 @@ public class APIError {
     private Date when;
     private Class<? extends ResponseException> exception;
     private Class<? extends Throwable> originalException;
+
+    public APIError(ResponseException e) {
+        this.message = e.getMessage();
+        this.status = e.getStatus().value();
+        this.when = e.getTime();
+        this.exception = e.getClass();
+        this.originalException = e.getCause() == null ? null : e.getCause().getClass();
+    }
 }

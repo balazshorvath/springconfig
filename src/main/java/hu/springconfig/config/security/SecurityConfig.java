@@ -40,7 +40,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and().httpBasic().disable()
                 .addFilterBefore(new JWTAuthenticationFilter(authenticationManager(), jwtTokenParser, objectMapper), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JWTAuthorizationFilter(authenticationManager(), jwtTokenParser), BasicAuthenticationFilter.class);
+                .addFilterBefore(new JWTAuthorizationFilter(authenticationManager(), jwtTokenParser, objectMapper), BasicAuthenticationFilter.class);
     }
 
     @Override

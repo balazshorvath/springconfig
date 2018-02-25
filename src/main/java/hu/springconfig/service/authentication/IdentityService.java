@@ -1,6 +1,5 @@
 package hu.springconfig.service.authentication;
 
-import hu.springconfig.config.message.MessageProvider;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
@@ -32,8 +31,6 @@ public class IdentityService extends LoggingComponent {
     private PasswordEncoder encoder;
     @Autowired
     private MailingService mailingService;
-    @Autowired
-    private MessageProvider messageProvider;
     @Autowired
     private IdentityValidator validator;
 
@@ -74,6 +71,7 @@ public class IdentityService extends LoggingComponent {
         checkPassword(current, oldPassword);
         validator.validatePasswordConfirm(newPassword, newConfirm);
         current.setPassword(encoder.encode(newPassword));
+        current.setTokenExpiration(new Date());
         return identityRepository.save(current);
     }
 
@@ -88,16 +86,15 @@ public class IdentityService extends LoggingComponent {
         checkPassword(current, password);
         validator.validateUsername(newUsername);
         current.setUsername(newUsername);
+        current.setTokenExpiration(new Date());
         return identityRepository.save(current);
     }
 
     public Identity resetPassword(Identity current) {
         String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
-        String msg = messageProvider.getMessage("mail.password_reset.text", newPassword);
-        String subject = messageProvider.getMessage("mail.password_reset.subject");
         current.setPassword(encoder.encode(newPassword));
         current.setTokenExpiration(new Date());
-        mailingService.sendMail(current.getEmail(), subject, msg);
+        mailingService.sendPasswordReset(current.getEmail(), newPassword);
         return identityRepository.save(current);
     }
 

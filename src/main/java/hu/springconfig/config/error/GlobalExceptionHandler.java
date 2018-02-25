@@ -22,7 +22,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private MessageProvider messageProvider;
 
     @ExceptionHandler(value = ResponseException.class)
-    public ResponseEntity<Object> handleResponseException(ResponseException exception, WebRequest request){
+    public ResponseEntity<Object> handleResponseException(ResponseException exception, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         APIError error = new APIError();
 
@@ -30,10 +30,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         error.setStatus(exception.getStatus().value());
         error.setWhen(exception.getTime());
 
-        if(exception.getCause() != null){
+        if (exception.getCause() != null) {
             error.setOriginalException(exception.getCause().getClass());
         }
-        if(Util.notNullAndNotEmpty(exception.getMessage())){
+        if (Util.notNullAndNotEmpty(exception.getMessage())) {
             error.setMessage(messageProvider.getMessage(exception.getMessage()));
         }
 
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(value = AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException exception, WebRequest request){
+    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException exception, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         APIError error = new APIError();
 
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         error.setStatus(HttpStatus.FORBIDDEN.value());
         error.setWhen(new Date());
 
-        if(exception.getCause() != null){
+        if (exception.getCause() != null) {
             error.setOriginalException(exception.getCause().getClass());
         } else {
             error.setOriginalException(exception.getClass());
@@ -58,4 +58,5 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return handleExceptionInternal(exception, error, headers, HttpStatus.FORBIDDEN, request);
     }
+
 }

@@ -1,16 +1,17 @@
 package hu.springconfig.config.security.authentication.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.springconfig.config.error.APIError;
 import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.service.base.LoggingComponent;
+import hu.springconfig.exception.InvalidTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -25,22 +26,33 @@ import java.io.IOException;
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private ObjectMapper objectMapper;
     private JWTTokenParser tokenParser;
 
-    public JWTAuthorizationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser) {
+    public JWTAuthorizationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser, ObjectMapper objectMapper) {
         super(authenticationManager);
         this.tokenParser = tokenParser;
+        this.objectMapper = objectMapper;
     }
 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        Identity identity = tokenParser.parseToken(request);
-        log.debug("Token parsed: {}", identity);
-        if(identity != null){
-            Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            Identity identity = tokenParser.parseToken(request);
+
+            log.debug("Token parsed: {}", identity);
+            if (identity != null) {
+                Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+            chain.doFilter(request, response);
+        } catch (InvalidTokenException e) {
+            APIError error = new APIError(e);
+
+            response.getOutputStream().print(objectMapper.writeValueAsString(error));
+            response.setContentType("application/json");
+            response.sendError(e.getStatus().value());
         }
-        chain.doFilter(request, response);
     }
 }
