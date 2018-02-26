@@ -1,6 +1,5 @@
 package hu.springconfig.service.authentication;
 
-import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;

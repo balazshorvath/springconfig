@@ -3,14 +3,20 @@ package hu.springconfig.authentication;
 
 import hu.springconfig.IntegrationTestBase;
 import hu.springconfig.config.error.APIError;
-import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.dto.authentication.SecuredUpdate;
 import hu.springconfig.data.dto.authentication.identity.*;
 import hu.springconfig.data.dto.simple.OKResponse;
+import hu.springconfig.data.entity.authentication.Identity;
+import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.FieldCondition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
-import hu.springconfig.exception.*;
+import hu.springconfig.data.repository.authentication.IRoleRepository;
+import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.ForbiddenException;
+import hu.springconfig.exception.InvalidTokenException;
+import hu.springconfig.exception.NotFoundException;
+import hu.springconfig.helper.CustomPageImpl;
 import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.service.mail.MailingService;
 import org.junit.Before;
@@ -18,14 +24,17 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.util.Pair;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +45,8 @@ import static org.mockito.Mockito.verify;
 public class IdentityIntegrationTest extends IntegrationTestBase {
     @Autowired
     private IIdentityRepository identityRepository;
+    @Autowired
+    private IRoleRepository roleRepository;
     @Autowired
     private PasswordEncoder encoder;
     @MockBean
@@ -48,7 +59,60 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    public void testIdentityCRUD() throws IOException, InterruptedException {
+    public void testIdentityFeaturesAdminRole() throws IOException, InterruptedException {
+        final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
+        final Role adminRole = roleRepository.findOne(RoleService.ADMIN_ROLE_ID);
+        final Set<Role> adminRoles = Collections.singleton(adminRole);
+        final Set<Role> userRoles = Collections.singleton(userRole);
+        final String password = "admin";
+        Identity admin = new Identity();
+
+        admin.setPassword(encoder.encode("admin"));
+        admin.setEmail("admin@admin.com");
+        admin.setUsername(password);
+        admin.setRoles(adminRoles);
+
+        admin = identityRepository.save(admin);
+
+        for (int i = 0; i < 50; i++) {
+            Identity identity = new Identity();
+            identity.setRoles(userRoles);
+            identity.setEmail("user" + i);
+            identity.setEmail("user" + i + "@user." + (i % 2 == 0 ? "hu" : "com"));
+            identity.setPassword(encoder.encode("password" + i));
+            identityRepository.save(identity);
+        }
+
+        /*
+         * Authenticate
+         */
+        Credentials credentials = new Credentials();
+        credentials.setUsername(admin.getUsername());
+        credentials.setPassword(password);
+        authenticateAndValidate(adminRoles.stream().map(Role::getId).collect(Collectors.toSet()), admin.getUsername(), admin.getEmail(), credentials);
+
+        /*
+         * Specifications test
+         */
+        FieldCondition fieldCondition = new FieldCondition(0, "email", FieldCondition.RelationalOperator.contains, "hu");
+        ParameterizedTypeReference<CustomPageImpl<IdentityDTO>> parameterizedTypeReference = new ParameterizedTypeReference<CustomPageImpl<IdentityDTO>>() {
+        };
+        Map<String, Object> pageRequest = createPageRequest(0, 10, Pair.of("name", "desc"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(fieldCondition), headers);
+        ResponseEntity<CustomPageImpl<IdentityDTO>> queryResult
+                = restTemplate.exchange("/auth/list", HttpMethod.POST, entity, parameterizedTypeReference, pageRequest);
+        CustomPageImpl<IdentityDTO> identityPage = queryResult.getBody();
+        assertNotNull(identityPage);
+        assertEquals(10, identityPage.getNumberOfElements());
+        assertEquals(3, identityPage.getTotalPages());
+        assertEquals(25, identityPage.getTotalElements());
+
+    }
+
+
+    public void testIdentityFeaturesUserRole() throws IOException, InterruptedException {
         final Set<Integer> roles = Collections.singleton(RoleService.USER_ROLE_ID);
         final String username = "myname";
         final String newUsername = "newusername";
@@ -70,7 +134,9 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         credentials.setUsername(username);
         credentials.setPassword(password);
 
-        // Register and authenticate
+        /*
+         * Register and authenticate
+         */
         restTemplate.postForObject("/auth/register", create, OKResponse.class);
         IdentityDTO identityToken = authenticateAndValidate(roles, username, email, credentials);
 
@@ -83,21 +149,27 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         identityToken = testChangeEmail(roles, newUsername, email, newEmail, newPassword, credentials);
         assertNotNull(identityToken);
 
-        // Try grant, should fail   POST    /auth/{id}/grant
+        /*
+         * Try grant, should fail   POST    /auth/{id}/grant
+         */
         Set<Integer> roleIds = new HashSet<>();
         roleIds.add(1000);
         error = restTemplate.postForEntity("/auth/" + identityToken.getId() + "/grant", roleIds, APIError.class);
 
         assertError(error, "forbidden.message", ForbiddenException.class, HttpStatus.FORBIDDEN);
 
-        // Try deny, should fail    POST    /auth/{id}/deny
+        /*
+         * Try deny, should fail    POST    /auth/{id}/deny
+         */
         roleIds = new HashSet<>();
         roleIds.add(1);
         error = restTemplate.postForEntity("/auth/" + identityToken.getId() + "/deny", roleIds, APIError.class);
 
         assertError(error, "forbidden.message", ForbiddenException.class, HttpStatus.FORBIDDEN);
 
-        // Try update, should fail  PUT     /auth/{id}
+        /*
+         * Try update, should fail  PUT     /auth/{id}
+         */
         IdentityUpdate update = new IdentityUpdate();
         update.setEmail("whatevea");
         update.setUsername("asdqt");
@@ -105,14 +177,18 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         error = putForEntity("/auth/" + identityToken.getId(), update, APIError.class);
         assertError(error, "forbidden.message", ForbiddenException.class, HttpStatus.FORBIDDEN);
 
-        // Try delete, should fail  DELETE  /auth/{id}
+        /*
+         * Try delete, should fail  DELETE  /auth/{id}
+         */
         error = deleteForEntity("/auth/" + identityToken.getId(), APIError.class);
         assertError(error, "forbidden.message", ForbiddenException.class, HttpStatus.FORBIDDEN);
         // Try list, should fail    POST    /auth/list
         error = restTemplate.postForEntity("/auth/list", new FieldCondition(), APIError.class);
         assertError(error, "forbidden.message", ForbiddenException.class, HttpStatus.FORBIDDEN);
 
-        // Reset password           POST    /auth/resetPassword
+        /*
+         * Reset password           POST    /auth/resetPassword
+         */
         ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
         ResetPassword resetPassword = new ResetPassword();
         resetPassword.setEmail("invalid");
@@ -134,11 +210,15 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         assertNotNull(generatedPassword);
         assertEquals(8, generatedPassword.length());
 
-        // Test token expiration
+        /*
+         * Test token expiration
+         */
         error = restTemplate.getForEntity("/auth/" + identityToken.getId(), APIError.class);
         assertError(error, "jwt.expired", InvalidTokenException.class, HttpStatus.UNAUTHORIZED);
 
-        // Authenticate with the new password
+        /*
+         * Authenticate with the new password
+         */
         credentials.setPassword(generatedPassword);
         authenticateAndValidate(roles, newUsername, newEmail, credentials);
     }

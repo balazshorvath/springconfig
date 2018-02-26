@@ -6,10 +6,8 @@ import hu.springconfig.config.error.APIError;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
-import hu.springconfig.data.dto.authentication.identity.IdentityUpdate;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ResponseException;
-import io.jsonwebtoken.Claims;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.util.Pair;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -24,6 +23,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -37,7 +38,7 @@ public class IntegrationTestBase {
     @Autowired
     protected TestRestTemplate restTemplate;
     @Autowired
-    private ObjectMapper objectMapper;
+    protected ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -60,9 +61,9 @@ public class IntegrationTestBase {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity;
-        if(request == null){
+        if (request == null) {
             entity = new HttpEntity<>(headers);
-        }else {
+        } else {
             entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
         }
         return restTemplate.exchange(url, httpMethod, entity, responseType);
@@ -102,6 +103,16 @@ public class IntegrationTestBase {
         assertEquals(message, error.getBody().getMessage());
     }
 
+    protected Map<String, Object> createPageRequest(Integer page, Integer limit, Pair<String, String>... sorts) {
+        Map<String, Object> pageRequest = new HashMap<>();
+        pageRequest.put("page", page);
+        pageRequest.put("size", limit);
+        for (Pair<String, String> sort : sorts) {
+            pageRequest.put("sort", sort.getFirst());
+            pageRequest.put(sort.getFirst() + ".dir", sort.getSecond());
+        }
+        return pageRequest;
+    }
 
     protected <T> ResponseEntity<T> putForEntity(String url, Object request, Class<T> responseType) throws IOException {
         return exchange(url, HttpMethod.PUT, request, responseType);
