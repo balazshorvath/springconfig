@@ -1,10 +1,7 @@
 package hu.springconfig.controller;
 
 import hu.springconfig.data.dto.authentication.SecuredUpdate;
-import hu.springconfig.data.dto.authentication.identity.ChangePassword;
-import hu.springconfig.data.dto.authentication.identity.IdentityCreate;
-import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
-import hu.springconfig.data.dto.authentication.identity.IdentityUpdate;
+import hu.springconfig.data.dto.authentication.identity.*;
 import hu.springconfig.data.dto.simple.OKResponse;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.query.model.Condition;
@@ -38,9 +35,8 @@ public class IdentityController {
     }
 
     @PostMapping("/auth/resetPassword")
-    public OKResponse resetPassword(Authentication authentication) {
-        // TODO: this is bad, why would you reset pw, if you are logged in
-        identityService.resetPassword((Identity) authentication.getPrincipal());
+    public OKResponse resetPassword(@RequestBody ResetPassword resetPassword) {
+        identityService.resetPassword(resetPassword.getEmail(), resetPassword.getUsername());
         return new OKResponse();
     }
 

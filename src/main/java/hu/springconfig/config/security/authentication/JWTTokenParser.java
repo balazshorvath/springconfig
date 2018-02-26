@@ -40,10 +40,12 @@ public class JWTTokenParser extends LoggingComponent {
     private ModelMapper modelMapper;
 
     public void createAndSetToken(HttpServletResponse response, Identity identity) {
+        long timestamp = System.currentTimeMillis();
         Claims claims = Jwts.claims()
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setExpiration(new Date(timestamp + expirationTime))
                 .setSubject(identity.getUsername());
         claims.put("id", identity.getId());
+        claims.put("generated", timestamp);
 
         try {
             response.setStatus(HttpStatus.OK.value());
@@ -87,8 +89,9 @@ public class JWTTokenParser extends LoggingComponent {
         if (!Util.notNullAndNotEmpty(user) && id == null) {
             return null;
         }
+        Long generated = claims.get("generated", Long.class);
         Identity identity = identityRepository.findOne(id);
-        if (identity.getTokenExpiration() != null && identity.getTokenExpiration().before(claims.getExpiration())){
+        if (identity.getTokenExpiration() != null && identity.getTokenExpiration() > generated){
             throw new InvalidTokenException("jwt.expired");
         }
         return identity;

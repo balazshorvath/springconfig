@@ -14,14 +14,17 @@ import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
 
 @Service
+@Transactional
 public class IdentityService extends LoggingComponent {
     @Autowired
     private IIdentityRepository identityRepository;
@@ -71,7 +74,7 @@ public class IdentityService extends LoggingComponent {
         checkPassword(current, oldPassword);
         validator.validatePasswordConfirm(newPassword, newConfirm);
         current.setPassword(encoder.encode(newPassword));
-        current.setTokenExpiration(new Date());
+        current.setTokenExpiration(System.currentTimeMillis());
         return identityRepository.save(current);
     }
 
@@ -86,16 +89,21 @@ public class IdentityService extends LoggingComponent {
         checkPassword(current, password);
         validator.validateUsername(newUsername);
         current.setUsername(newUsername);
-        current.setTokenExpiration(new Date());
+        current.setTokenExpiration(System.currentTimeMillis());
         return identityRepository.save(current);
     }
 
-    public Identity resetPassword(Identity current) {
+    public Identity resetPassword(String email, String username) {
+        Identity identity = findByUsername(username);
+        if(!Util.notNullAndNotEmpty(email) || !email.equals(identity.getEmail())){
+            throw new ForbiddenException("identity.reset_password_failed");
+        }
+
         String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
-        current.setPassword(encoder.encode(newPassword));
-        current.setTokenExpiration(new Date());
-        mailingService.sendPasswordReset(current.getEmail(), newPassword);
-        return identityRepository.save(current);
+        identity.setPassword(encoder.encode(newPassword));
+        identity.setTokenExpiration(System.currentTimeMillis());
+        mailingService.sendPasswordReset(identity.getEmail(), newPassword);
+        return identityRepository.save(identity);
     }
 
     public Identity updateIdentity(Identity current, Long id, String username, String email) {
@@ -143,7 +151,11 @@ public class IdentityService extends LoggingComponent {
     }
 
     public Identity findByUsername(String username) {
-        return identityRepository.findByUsername(username);
+        Identity identity = identityRepository.findByUsername(username);
+        if (identity == null) {
+            throw new NotFoundException("identity.not_found");
+        }
+        return identity;
     }
 
     private void checkPassword(Identity identity, String password) {

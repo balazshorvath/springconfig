@@ -75,7 +75,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testResetPassword() {
         String oldPassword = user.getPassword();
-        Identity updated = underTest.resetPassword(user);
+        Identity updated = underTest.resetPassword(user.getEmail(), user.getUsername());
         assertNotNull(updated.getTokenExpiration());
         assertNotEquals(oldPassword, updated.getPassword());
         verify(mailingService, times(1)).sendMail(updated.getEmail(), "mail.password_reset.subject", "mail.password_reset.text");

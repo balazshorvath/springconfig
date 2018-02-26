@@ -126,7 +126,7 @@ databaseChangeLog {
 
     changeSet(id: 'identity-token-expiration', author: 'balazs_horvath') {
         addColumn(tableName: 'identity') {
-            column(name: 'token_expiration', type: 'DATETIME')
+            column(name: 'token_expiration', type: 'BIGINT')
         }
     }
 }

@@ -45,7 +45,7 @@ public class Identity implements UserDetails {
      * changed in the identity's data.
      * Tokens acquired before this, should be handled as expired.
      */
-    private Date tokenExpiration;
+    private Long tokenExpiration;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "identity_roles",

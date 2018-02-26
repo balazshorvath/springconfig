@@ -26,11 +26,12 @@ import java.util.ArrayList;
  * ({@link #successfulAuthentication(HttpServletRequest, HttpServletResponse, FilterChain, Authentication)}).
  */
 public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
+    public static final AntPathRequestMatcher LOGIN_REQUEST = new AntPathRequestMatcher("/auth", "POST");
     private JWTTokenParser tokenParser;
     private ObjectMapper objectMapper;
 
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser, ObjectMapper objectMapper) {
-        super(new AntPathRequestMatcher("/auth", "POST"));
+        super(LOGIN_REQUEST);
         setAuthenticationManager(authenticationManager);
         this.tokenParser = tokenParser;
         this.objectMapper = objectMapper;

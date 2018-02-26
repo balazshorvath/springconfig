@@ -37,6 +37,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             error.setMessage(messageProvider.getMessage(exception.getMessage()));
         }
 
+        logger.error("ResponseException handled: " + error, exception);
         return handleExceptionInternal(exception, error, headers, exception.getStatus(), request);
     }
 
@@ -56,6 +57,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
         error.setMessage(messageProvider.getMessage("forbidden.message"));
 
+        logger.error("AccessDeniedException handled: " + error, exception);
         return handleExceptionInternal(exception, error, headers, HttpStatus.FORBIDDEN, request);
     }
 

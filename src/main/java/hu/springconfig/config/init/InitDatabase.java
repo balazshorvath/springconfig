@@ -3,6 +3,7 @@ package hu.springconfig.config.init;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IPrivilegeRepository;
+import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.service.base.LoggingComponent;
@@ -36,10 +37,11 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
      */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        Identity adminIdentity = identityService.findByUsername("administrator");
-        if (adminIdentity == null) {
+        try{
+            identityService.findByUsername("administrator");
+        }catch (NotFoundException e){
             String password = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
-            adminIdentity = new Identity();
+            Identity adminIdentity = new Identity();
             adminIdentity.setUsername("administrator");
             adminIdentity.setPassword(encoder.encode(password));
             adminIdentity.setRoles(Collections.singleton(roleService.get(RoleService.ADMIN_ROLE_ID)));

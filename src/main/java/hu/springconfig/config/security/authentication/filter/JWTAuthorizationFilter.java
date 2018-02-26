@@ -8,6 +8,7 @@ import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.InvalidTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 
 /**
@@ -39,20 +41,23 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         try {
-            Identity identity = tokenParser.parseToken(request);
+            if(!JWTAuthenticationFilter.LOGIN_REQUEST.matches(request)){
+                Identity identity = tokenParser.parseToken(request);
 
-            log.debug("Token parsed: {}", identity);
-            if (identity != null) {
-                Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("Token parsed: {}", identity);
+                if (identity != null) {
+                    Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
             chain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             APIError error = new APIError(e);
-
-            response.getOutputStream().print(objectMapper.writeValueAsString(error));
-            response.setContentType("application/json");
-            response.sendError(e.getStatus().value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getOutputStream().println(objectMapper.writeValueAsString(error));
+            response.setStatus(e.getStatus().value());
+            log.error("Received an invalid token, that generated an error: {} on request {}, method {}",
+                    error, request.getRequestURI(), request.getMethod());
         }
     }
 }
