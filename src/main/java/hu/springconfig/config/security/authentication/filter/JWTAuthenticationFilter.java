@@ -1,11 +1,15 @@
 package hu.springconfig.config.security.authentication.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.springconfig.config.error.APIError;
+import hu.springconfig.config.message.MessageProvider;
 import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.AuthenticationFailedException;
+import hu.springconfig.exception.authentication.AuthenticationBadRequestException;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -29,9 +33,11 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
     public static final AntPathRequestMatcher LOGIN_REQUEST = new AntPathRequestMatcher("/auth", "POST");
     private JWTTokenParser tokenParser;
     private ObjectMapper objectMapper;
+    private MessageProvider messageProvider;
 
-    public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser, ObjectMapper objectMapper) {
+    public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser, ObjectMapper objectMapper, MessageProvider messageProvider) {
         super(LOGIN_REQUEST);
+        this.messageProvider = messageProvider;
         setAuthenticationManager(authenticationManager);
         this.tokenParser = tokenParser;
         this.objectMapper = objectMapper;
@@ -44,7 +50,7 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
             Credentials credentials = objectMapper.readValue(request.getInputStream(), Credentials.class);
             authentication = getAuthenticationManager().authenticate(new JWTAuthenticationToken(null, credentials, new ArrayList<>()));
         } catch (IOException e) {
-            throw new BadRequestException("Could not parse credentials.", e);
+            throw new AuthenticationBadRequestException("http.bad.request", e);
         }
         return authentication;
     }
@@ -52,5 +58,19 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         tokenParser.createAndSetToken(response, (Identity) authResult.getPrincipal());
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
+        AuthenticationFailedException exception = new AuthenticationFailedException(failed.getMessage(), failed);
+        APIError error = new APIError(exception);
+        error.setMessage(messageProvider.getMessage(failed.getMessage()));
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getOutputStream().println(objectMapper.writeValueAsString(error));
+        if (failed instanceof AuthenticationBadRequestException) {
+            response.setStatus(((AuthenticationBadRequestException) failed).getStatus().value());
+        } else {
+            response.setStatus(exception.getStatus().value());
+        }
     }
 }
