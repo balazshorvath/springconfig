@@ -16,10 +16,7 @@ import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
-import hu.springconfig.exception.BadRequestException;
-import hu.springconfig.exception.ForbiddenException;
-import hu.springconfig.exception.InvalidTokenException;
-import hu.springconfig.exception.NotFoundException;
+import hu.springconfig.exception.*;
 import hu.springconfig.helper.CustomPageImpl;
 import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.service.mail.MailingService;
@@ -69,7 +66,58 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    public void testIdentityFeaturesAdminRole() throws IOException, InterruptedException {
+    public void testAuthentication() throws IOException {
+        final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
+        final Set<Role> userRoles = Collections.singleton(userRole);
+        final String username = "user";
+        final String email = "user@user.com";
+        Identity identity = new Identity();
+
+        identity.setPassword(encoder.encode(username));
+        identity.setEmail(email);
+        identity.setUsername(username);
+        identity.setRoles(userRoles);
+
+        identity = identityRepository.save(identity);
+
+        /*
+         * Test empty request
+         */
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<APIError> error = restTemplate.exchange("/auth", HttpMethod.POST, entity, APIError.class);
+        assertError(error, "http.bad.request", BadRequestException.class, HttpStatus.BAD_REQUEST);
+
+        /*
+         * Test invalid request
+         */
+        entity = new HttpEntity<>("{\"usename\": \"user\", \"password\":\"user\"}", headers);
+        error = restTemplate.exchange("/auth", HttpMethod.POST, entity, APIError.class);
+        assertError(error, "http.bad.request", BadRequestException.class, HttpStatus.BAD_REQUEST);
+        /*
+         * Test empty credentials
+         */
+        entity = new HttpEntity<>("{\"username\": \"\", \"password\":\"\"}", headers);
+        error = restTemplate.exchange("/auth", HttpMethod.POST, entity, APIError.class);
+        assertError(error, "authentication.failed.credentials", AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED);
+        /*
+         * Test invalid credentials
+         */
+        entity = new HttpEntity<>("{\"username\": \"user\", \"password\":\"admin\"}", headers);
+        error = restTemplate.exchange("/auth", HttpMethod.POST, entity, APIError.class);
+        assertError(error, "authentication.failed.credentials", AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED);
+        /*
+         * Test valid credentials
+         */
+        Credentials credentials = new Credentials();
+        credentials.setPassword(username);
+        credentials.setUsername(username);
+        authenticateAndValidate(Collections.singleton(RoleService.USER_ROLE_ID), username, email, credentials);
+    }
+
+    @Test
+    public void testIdentityFeaturesAdminRole() throws IOException {
         final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
         final Role adminRole = roleRepository.findOne(RoleService.ADMIN_ROLE_ID);
         final Set<Role> adminRoles = Collections.singleton(adminRole);
@@ -77,7 +125,7 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         final String password = "admin";
         Identity admin = new Identity();
 
-        admin.setPassword(encoder.encode("admin"));
+        admin.setPassword(encoder.encode(password));
         admin.setEmail("admin@admin.com");
         admin.setUsername(password);
         admin.setRoles(adminRoles);
@@ -182,6 +230,7 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     }
 
 
+    @Test
     public void testIdentityFeaturesUserRole() throws IOException, InterruptedException {
         final Set<Integer> roles = Collections.singleton(RoleService.USER_ROLE_ID);
         final String username = "myname";

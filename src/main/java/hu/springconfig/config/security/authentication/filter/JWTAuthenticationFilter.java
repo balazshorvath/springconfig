@@ -8,6 +8,7 @@ import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.AuthenticationFailedException;
+import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.authentication.AuthenticationBadRequestException;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -62,15 +63,18 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
-        AuthenticationFailedException exception = new AuthenticationFailedException(failed.getMessage(), failed);
-        APIError error = new APIError(exception);
+        APIError error;
+        if (failed instanceof AuthenticationBadRequestException) {
+            BadRequestException exception = new BadRequestException(failed);
+            error = new APIError(exception);
+            response.setStatus(((AuthenticationBadRequestException) failed).getStatus().value());
+        } else {
+            AuthenticationFailedException exception = new AuthenticationFailedException(failed.getMessage(), failed);
+            error = new APIError(exception);
+            response.setStatus(exception.getStatus().value());
+        }
         error.setMessage(messageProvider.getMessage(failed.getMessage()));
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getOutputStream().println(objectMapper.writeValueAsString(error));
-        if (failed instanceof AuthenticationBadRequestException) {
-            response.setStatus(((AuthenticationBadRequestException) failed).getStatus().value());
-        } else {
-            response.setStatus(exception.getStatus().value());
-        }
     }
 }
