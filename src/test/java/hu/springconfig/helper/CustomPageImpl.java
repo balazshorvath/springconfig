@@ -1,7 +1,8 @@
 package hu.springconfig.helper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -9,7 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomPageImpl<T> extends PageImpl<T> {
 

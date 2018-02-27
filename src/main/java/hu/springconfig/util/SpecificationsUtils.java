@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@SuppressWarnings("unchecked")
 public class SpecificationsUtils {
 
     public static <T> Specification<T> withQuery(Condition condition) {
