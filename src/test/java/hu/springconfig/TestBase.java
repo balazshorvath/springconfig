@@ -65,6 +65,7 @@ public class TestBase {
     protected void mockIdentityDatabase(Identity... identities) {
         for (Identity identity : identities) {
             when(identityRepository.findOne(identity.getId())).thenReturn(new Identity(identity));
+            when(identityRepository.findByUsername(identity.getUsername())).thenReturn(new Identity(identity));
         }
     }
 

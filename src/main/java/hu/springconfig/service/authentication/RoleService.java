@@ -50,6 +50,7 @@ public class RoleService {
         if (USER_ROLE_ID.equals(roleId) || ADMIN_ROLE_ID.equals(roleId)) {
             throw new ForbiddenException("role.static_delete");
         }
+        roleRepository.delete(roleId);
         return role;
     }
 
@@ -62,7 +63,7 @@ public class RoleService {
                 throw new ForbiddenException("role.id.static");
             }
             role = delete(id);
-            role.setId(id);
+            role.setId(newId);
         }
         if (Util.notNullAndNotEmpty(roleName)) {
             if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {

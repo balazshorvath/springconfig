@@ -5,6 +5,7 @@ import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.ResponseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,10 +53,38 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(exception, error, headers, HttpStatus.FORBIDDEN, request);
     }
 
+    @ExceptionHandler(value = Exception.class)
+    public ResponseEntity<Object> handleUnexpectedException(Exception exception, WebRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        APIError error = new APIError(new BadRequestException(exception.getMessage(), exception));
+        error.setMessage(messageProvider.getMessage("http.internal.error"));
+        return handleExceptionInternal(exception, error, headers, HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    @ExceptionHandler(value = PropertyReferenceException.class)
+    public ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException exception, WebRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        return handleBadRequests(exception, headers, request, "specifications.property.not_found");
+    }
+
+    @ExceptionHandler(value = IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgumentException(PropertyReferenceException exception, WebRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        return handleBadRequests(exception, headers, request);
+    }
+
     @Override
-    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        APIError error = new APIError(new BadRequestException(ex.getMessage(), ex));
-        error.setMessage(messageProvider.getMessage("http.bad.request"));
-        return handleExceptionInternal(ex, error, headers, HttpStatus.BAD_REQUEST, request);
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        return handleBadRequests(exception, headers, request);
+    }
+
+    private ResponseEntity<Object> handleBadRequests(Exception exception, HttpHeaders headers, WebRequest request, String message) {
+        APIError error = new APIError(new BadRequestException(exception.getMessage(), exception));
+        error.setMessage(messageProvider.getMessage(message));
+        return handleExceptionInternal(exception, error, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    private ResponseEntity<Object> handleBadRequests(Exception exception, HttpHeaders headers, WebRequest request) {
+        return handleBadRequests(exception, headers, request, "http.bad.request");
     }
 }

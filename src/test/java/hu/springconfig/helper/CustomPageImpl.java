@@ -1,15 +1,16 @@
 package hu.springconfig.helper;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomPageImpl<T> extends PageImpl<T> {
 
     private static final long serialVersionUID = 1L;
@@ -23,7 +24,6 @@ public class CustomPageImpl<T> extends PageImpl<T> {
     private boolean next;
     private boolean last;
     private List<T> content;
-    private Sort sort;
 
     public CustomPageImpl() {
         super(new ArrayList<>());
@@ -31,6 +31,6 @@ public class CustomPageImpl<T> extends PageImpl<T> {
 
     public Page<T> pageImpl() {
         return new PageImpl<>(getContent(), new PageRequest(getNumber(),
-                getSize(), getSort()), getTotalElements());
+                getSize()), getTotalElements());
     }
 }

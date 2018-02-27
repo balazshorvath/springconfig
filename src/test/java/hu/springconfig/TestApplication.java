@@ -14,7 +14,7 @@ import static org.mockito.Mockito.mock;
 
 @Configuration
 @ConfigurationProperties
-@ComponentScan({"hu.springconfig.service.authentication", "hu.springconfig.data", "hu.springconfig.config.security", "hu.springconfig.config.message"})
+@ComponentScan({"hu.springconfig.service.authentication", "hu.springconfig.data", "hu.springconfig.config.message"})
 public class TestApplication {
 
     @Bean

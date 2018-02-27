@@ -9,9 +9,7 @@ import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ResponseException;
 import org.junit.Before;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,21 +17,13 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = {Application.class}
-)
 public class IntegrationTestBase {
     @Autowired
     protected TestRestTemplate restTemplate;
@@ -103,15 +93,14 @@ public class IntegrationTestBase {
         assertEquals(message, error.getBody().getMessage());
     }
 
-    protected Map<String, Object> createPageRequest(Integer page, Integer limit, Pair<String, String>... sorts) {
-        Map<String, Object> pageRequest = new HashMap<>();
-        pageRequest.put("page", page);
-        pageRequest.put("size", limit);
-        for (Pair<String, String> sort : sorts) {
-            pageRequest.put("sort", sort.getFirst());
-            pageRequest.put(sort.getFirst() + ".dir", sort.getSecond());
+    protected String createPageRequest(Integer page, Integer size, Pair... sorts) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("page=").append(page);
+        sb.append('&').append("size=").append(size);
+        for (Pair sort : sorts) {
+            sb.append('&').append("sort=").append(sort.getFirst()).append(',').append(sort.getSecond());
         }
-        return pageRequest;
+        return sb.toString();
     }
 
     protected <T> ResponseEntity<T> putForEntity(String url, Object request, Class<T> responseType) throws IOException {

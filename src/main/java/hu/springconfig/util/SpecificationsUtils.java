@@ -56,9 +56,9 @@ public class SpecificationsUtils {
 
     /**
      * Supported field types:
-     *  Any primitive and their class pair.
-     *  Date
-     *  String
+     * Any primitive and their class pair.
+     * Date
+     * String
      *
      * @param fieldCondition
      * @param root
@@ -68,13 +68,7 @@ public class SpecificationsUtils {
      */
     public static <T> Predicate createPredicateField(FieldCondition fieldCondition, Root<T> root, CriteriaBuilder cb) {
         Predicate predicate = null;
-        String[] join = fieldCondition.getFieldName().split("\\.");
-        Path path = null;
-        if (join.length > 1) {
-            path = root.join(join[0]).get(join[1]);
-        } else {
-            path = root.get(fieldCondition.getFieldName());
-        }
+        Path path = joinFields(fieldCondition.getFieldName(), root);
         Class<?> type = path.getJavaType();
         if (type.equals(boolean.class) || type.equals(Boolean.class)) {
             predicate = getBoolean(fieldCondition.getRelationalOperator(),
@@ -161,5 +155,18 @@ public class SpecificationsUtils {
                 break;
         }
         return cb.like(field, queryString);
+    }
+
+    private static <T> Path joinFields(String fieldName, Root<T> root) {
+        if (fieldName.contains(".")) {
+            String[] joins = fieldName.split("\\.");
+            int last = joins.length - 1;
+            Join join = root.join(joins[0]);
+            for (int i = 1; i < last; i++) {
+                join = join.join(joins[i]);
+            }
+            return join.get(joins[last]);
+        }
+        return root.get(fieldName);
     }
 }

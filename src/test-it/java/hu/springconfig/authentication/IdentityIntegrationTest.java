@@ -1,6 +1,7 @@
 package hu.springconfig.authentication;
 
 
+import hu.springconfig.Application;
 import hu.springconfig.IntegrationTestBase;
 import hu.springconfig.config.error.APIError;
 import hu.springconfig.data.dto.authentication.Credentials;
@@ -8,7 +9,10 @@ import hu.springconfig.data.dto.authentication.SecuredUpdate;
 import hu.springconfig.data.dto.authentication.identity.*;
 import hu.springconfig.data.dto.simple.OKResponse;
 import hu.springconfig.data.entity.authentication.Identity;
+import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.data.query.model.Condition;
+import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
@@ -21,19 +25,20 @@ import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.service.mail.MailingService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.util.Pair;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -42,6 +47,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = {Application.class}
+)
 public class IdentityIntegrationTest extends IntegrationTestBase {
     @Autowired
     private IIdentityRepository identityRepository;
@@ -77,7 +87,7 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         for (int i = 0; i < 50; i++) {
             Identity identity = new Identity();
             identity.setRoles(userRoles);
-            identity.setEmail("user" + i);
+            identity.setUsername("user" + i);
             identity.setEmail("user" + i + "@user." + (i % 2 == 0 ? "hu" : "com"));
             identity.setPassword(encoder.encode("password" + i));
             identityRepository.save(identity);
@@ -94,21 +104,81 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         /*
          * Specifications test
          */
-        FieldCondition fieldCondition = new FieldCondition(0, "email", FieldCondition.RelationalOperator.contains, "hu");
         ParameterizedTypeReference<CustomPageImpl<IdentityDTO>> parameterizedTypeReference = new ParameterizedTypeReference<CustomPageImpl<IdentityDTO>>() {
         };
-        Map<String, Object> pageRequest = createPageRequest(0, 10, Pair.of("name", "desc"));
+        int numberOfElements = 10;
+        String pageRequest = createPageRequest(0, numberOfElements, Pair.of("name", "desc"));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        FieldCondition fieldCondition = new FieldCondition(0, "email", FieldCondition.RelationalOperator.contains, "hu");
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(fieldCondition), headers);
-        ResponseEntity<CustomPageImpl<IdentityDTO>> queryResult
-                = restTemplate.exchange("/auth/list", HttpMethod.POST, entity, parameterizedTypeReference, pageRequest);
-        CustomPageImpl<IdentityDTO> identityPage = queryResult.getBody();
-        assertNotNull(identityPage);
-        assertEquals(10, identityPage.getNumberOfElements());
-        assertEquals(3, identityPage.getTotalPages());
-        assertEquals(25, identityPage.getTotalElements());
 
+        // PropertyReferenceException
+        ResponseEntity<APIError> error = restTemplate.exchange("/auth/list?" + pageRequest, HttpMethod.POST, entity, APIError.class);
+        assertError(error, "specifications.property.not_found", BadRequestException.class, HttpStatus.BAD_REQUEST);
+        assertEquals(PropertyReferenceException.class, error.getBody().getOriginalException());
+
+        // Fix property name
+        pageRequest = createPageRequest(0, numberOfElements, Pair.of("email", "desc"));
+        ResponseEntity<CustomPageImpl<IdentityDTO>> queryResult
+                = restTemplate.exchange("/auth/list?" + pageRequest, HttpMethod.POST, entity, parameterizedTypeReference);
+        assertPageResult(queryResult.getBody(), numberOfElements, 3, 25);
+
+        // Test "join" properties
+        fieldCondition = new FieldCondition(0, "roles.id", FieldCondition.RelationalOperator.eq, RoleService.ADMIN_ROLE_ID);
+        pageRequest = createPageRequest(0, 5, Pair.of("email", "desc"));
+        entity = new HttpEntity<>(objectMapper.writeValueAsString(fieldCondition), headers);
+        queryResult = restTemplate.exchange("/auth/list?" + pageRequest, HttpMethod.POST, entity, parameterizedTypeReference);
+        assertPageResult(queryResult.getBody(), 2, 1, 2);
+
+        // Test "join" properties
+        fieldCondition = new FieldCondition(
+                0,
+                "roles.privileges.id",
+                FieldCondition.RelationalOperator.eq,
+                Privilege.Privileges.IDENTITY_GET.getValue()
+        );
+        pageRequest = createPageRequest(0, 5, Pair.of("email", "desc"));
+        entity = new HttpEntity<>(objectMapper.writeValueAsString(fieldCondition), headers);
+        queryResult = restTemplate.exchange("/auth/list?" + pageRequest, HttpMethod.POST, entity, parameterizedTypeReference);
+        assertPageResult(queryResult.getBody(), 2, 1, 2);
+
+        // Use condition set
+        ConditionSet conditionSet = new ConditionSet(Condition.LogicalOperator.and, 0, new ArrayList<>());
+        conditionSet.getConditions().add(
+                new FieldCondition(1, "roles.id", FieldCondition.RelationalOperator.eq, RoleService.USER_ROLE_ID)
+        );
+        conditionSet.getConditions().add(
+                new FieldCondition(1, "email", FieldCondition.RelationalOperator.endswith, "com")
+        );
+        conditionSet.getConditions().add(
+                new FieldCondition(1, "username", FieldCondition.RelationalOperator.contains, "1")
+        );
+        /*
+         * role is "user" (50)
+         * email ends with "com" (25)
+         * username contains "1", user1, user10-19 (10), user21, user31, user41 (14)
+         *
+         * with AND: user1, user11, user13, user15, user17, user19, user21, user31, user41 (9)
+         */
+        pageRequest = createPageRequest(0, 5, Pair.of("username", "asc"));
+        entity = new HttpEntity<>(objectMapper.writeValueAsString(conditionSet), headers);
+        queryResult = restTemplate.exchange("/auth/list?" + pageRequest, HttpMethod.POST, entity, parameterizedTypeReference);
+        CustomPageImpl<IdentityDTO> page = queryResult.getBody();
+        List<IdentityDTO> content = page.getContent();
+        assertPageResult(page, 5, 2, 9);
+
+        assertEquals("user1", content.get(0).getUsername());
+        assertEquals("user11", content.get(1).getUsername());
+        assertEquals("user17", content.get(4).getUsername());
+
+    }
+
+    private void assertPageResult(CustomPageImpl<IdentityDTO> identityPage, int numberOfElements, int totalPages, int totalElements) {
+        assertNotNull(identityPage);
+        assertEquals(numberOfElements, identityPage.getNumberOfElements());
+        assertEquals(totalPages, identityPage.getTotalPages());
+        assertEquals(totalElements, identityPage.getTotalElements());
     }
 
 

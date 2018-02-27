@@ -18,9 +18,8 @@ import java.util.Collections;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -54,18 +53,19 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         ForbiddenException exception = null;
         try {
             underTest.delete(user, admin.getId());
-        } catch (ForbiddenException e){
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
         assertEquals("identity.low_rank", exception.getMessage());
     }
+
     @Test
     public void testDeleteNotFound() {
         NotFoundException exception = null;
         try {
             underTest.delete(admin, 10L);
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -78,21 +78,21 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         Identity updated = underTest.resetPassword(user.getEmail(), user.getUsername());
         assertNotNull(updated.getTokenExpiration());
         assertNotEquals(oldPassword, updated.getPassword());
-        verify(mailingService, times(1)).sendMail(updated.getEmail(), "mail.password_reset.subject", "mail.password_reset.text");
+        verify(mailingService, times(1)).sendPasswordReset(eq(updated.getEmail()), anyString());
     }
 
     @Test
     public void testChangePassword() {
         Identity updated = underTest.changePassword(user, "password", "newpassword", "newpassword");
-        assertIdentity(updated, 20L,  "user", "user@email", "newpassword", Collections.singleton(userRole));
+        assertIdentity(updated, 20L, "user", "user@email", "newpassword", Collections.singleton(userRole));
     }
 
     @Test
     public void testChangePasswordInvalid() {
         BadRequestException exception = null;
-        try{
+        try {
             underTest.changePassword(user, "password", "ne", "ne");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -102,9 +102,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangePasswordConfirmInvalid() {
         BadRequestException exception = null;
-        try{
+        try {
             underTest.changePassword(user, "password", "newp", "newpassword");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -114,9 +114,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangePasswordForbidden() {
         ForbiddenException exception = null;
-        try{
+        try {
             underTest.changePassword(user, "pord", "newpassword", "newpassword");
-        }catch (ForbiddenException e){
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -126,15 +126,15 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangeUsernameSelf() {
         Identity updated = underTest.changeUsernameSelf(user, "password", "username");
-        assertIdentity(updated, 20L,  "username", "user@email", "password", Collections.singleton(userRole));
+        assertIdentity(updated, 20L, "username", "user@email", "password", Collections.singleton(userRole));
     }
 
     @Test
     public void testChangeUsernameSelfInvalid() {
         BadRequestException exception = null;
-        try{
+        try {
             underTest.changeUsernameSelf(user, "password", "use+rname");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -144,9 +144,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangeUsernameSelfForbidden() {
         ForbiddenException exception = null;
-        try{
+        try {
             underTest.changeUsernameSelf(user, "password1", "username");
-        }catch (ForbiddenException e){
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -156,15 +156,15 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangeEmailSelf() {
         Identity updated = underTest.changeEmailSelf(user, "password", "username@email");
-        assertIdentity(updated, 20L,  "user", "username@email", "password", Collections.singleton(userRole));
+        assertIdentity(updated, 20L, "user", "username@email", "password", Collections.singleton(userRole));
     }
 
     @Test
     public void testChangeEmailSelfInvalid() {
         BadRequestException exception = null;
-        try{
+        try {
             underTest.changeEmailSelf(user, "password", "us");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -174,9 +174,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangeEmailSelfForbidden() {
         ForbiddenException exception = null;
-        try{
+        try {
             underTest.changeEmailSelf(user, "password1", "username@email");
-        }catch (ForbiddenException e){
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -184,7 +184,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     }
 
     @Test
-    public void testUpdate(){
+    public void testUpdate() {
         Identity updated = underTest.updateIdentity(admin, user.getId(), "somethingelse", "");
         assertIdentity(updated, 20L, "somethingelse", user.getEmail(), "password", user.getRoles());
         updated = underTest.updateIdentity(admin, user.getId(), "somethingelse1", "newmail@mail");
@@ -194,9 +194,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testUpdateLowRank() {
         ForbiddenException exception = null;
-        try{
+        try {
             underTest.updateIdentity(user, admin.getId(), "somethingelse", "");
-        }catch (ForbiddenException e){
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -206,9 +206,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testUpdateInvalidUsername() {
         BadRequestException exception = null;
-        try{
+        try {
             underTest.updateIdentity(admin, user.getId(), "qwe", "");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -218,9 +218,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testUpdateInvalidEmail() {
         BadRequestException exception = null;
-        try{
+        try {
             underTest.updateIdentity(admin, user.getId(), "", "asd");
-        }catch (BadRequestException e){
+        } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -230,9 +230,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testUpdateEntityDoesNotExist() {
         NotFoundException exception = null;
-        try{
+        try {
             underTest.updateIdentity(user, 10L, "somethingelse", "");
-        }catch (NotFoundException e){
+        } catch (NotFoundException e) {
             exception = e;
         }
         assertNotNull(exception);
