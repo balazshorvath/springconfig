@@ -1,10 +1,9 @@
 package hu.springconfig.config.error;
 
 import hu.springconfig.config.message.MessageProvider;
-import hu.springconfig.exception.BadRequestException;
-import hu.springconfig.exception.ForbiddenException;
-import hu.springconfig.exception.ResponseException;
+import hu.springconfig.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -56,9 +55,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<Object> handleUnexpectedException(Exception exception, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
-        APIError error = new APIError(new BadRequestException(exception.getMessage(), exception));
+        APIError error = new APIError(new InternalErrorException(exception.getMessage(), exception));
         error.setMessage(messageProvider.getMessage("http.internal.error"));
         return handleExceptionInternal(exception, error, headers, HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    // TODO extract more information!
+    @ExceptionHandler(value = DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException exception, WebRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        APIError error = new APIError(new ValidationException(exception.getMessage(), exception));
+        error.setMessage(messageProvider.getMessage("http.internal.error"));
+        return handleExceptionInternal(exception, error, headers, HttpStatus.CONFLICT, request);
     }
 
     @ExceptionHandler(value = PropertyReferenceException.class)

@@ -14,8 +14,6 @@ import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
-import hu.springconfig.data.repository.authentication.IIdentityRepository;
-import hu.springconfig.data.repository.authentication.IRoleRepository;
 import hu.springconfig.exception.*;
 import hu.springconfig.helper.CustomPageImpl;
 import hu.springconfig.service.authentication.RoleService;
@@ -25,14 +23,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.util.Pair;
 import org.springframework.http.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -50,12 +46,6 @@ import static org.mockito.Mockito.verify;
         classes = {Application.class}
 )
 public class IdentityIntegrationTest extends IntegrationTestBase {
-    @Autowired
-    private IIdentityRepository identityRepository;
-    @Autowired
-    private IRoleRepository roleRepository;
-    @Autowired
-    private PasswordEncoder encoder;
     @MockBean
     private MailingService mailingService;
 
@@ -66,19 +56,12 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    public void testAuthentication() throws IOException {
+    public void testAuthentication() {
         final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
         final Set<Role> userRoles = Collections.singleton(userRole);
         final String username = "user";
         final String email = "user@user.com";
-        Identity identity = new Identity();
-
-        identity.setPassword(encoder.encode(username));
-        identity.setEmail(email);
-        identity.setUsername(username);
-        identity.setRoles(userRoles);
-
-        identity = identityRepository.save(identity);
+        addIdentity(userRoles, username, email);
 
         /*
          * Test empty request
@@ -119,6 +102,7 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         credentials.setUsername(username);
         authenticateAndValidate(Collections.singleton(RoleService.USER_ROLE_ID), username, email, credentials);
     }
+
 
     @Test
     public void testIdentityFeaturesAdminRole() throws IOException {
@@ -304,6 +288,9 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
          * Register and authenticate
          */
         restTemplate.postForObject("/auth/register", create, OKResponse.class);
+        // Try registering the same name
+        error = restTemplate.postForEntity("/auth/register", create, APIError.class);
+        assertError(error, "idk", ValidationException.class, HttpStatus.CONFLICT);
         IdentityDTO identityToken = authenticateAndValidate(roles, username, email, credentials);
 
         testGet(roles, username, email, identityToken);
@@ -470,18 +457,18 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         changePassword.setOldPassword(password);
 
         error = restTemplate.postForEntity("/auth/changePassword", changePassword, APIError.class);
-        assertError(error, "identity.password.confirm.mismatch", BadRequestException.class, HttpStatus.BAD_REQUEST);
+        assertError(error, "identity.password.confirm.mismatch", ValidationException.class, HttpStatus.CONFLICT);
 
         // Case 3: passwords contain bad characters
         changePassword.setNewPassword("izgnmhjgaáé");
         error = restTemplate.postForEntity("/auth/changePassword", changePassword, APIError.class);
-        assertError(error, "identity.password.invalid", BadRequestException.class, HttpStatus.BAD_REQUEST);
+        assertError(error, "identity.password.invalid", ValidationException.class, HttpStatus.CONFLICT);
 
         // Case 4: passwords are too long
         changePassword.setNewPassword("1234569789123456789123456789123456789");
 
         error = restTemplate.postForEntity("/auth/changePassword", changePassword, APIError.class);
-        assertError(error, "identity.password.invalid", BadRequestException.class, HttpStatus.BAD_REQUEST);
+        assertError(error, "identity.password.invalid", ValidationException.class, HttpStatus.CONFLICT);
 
         // Case 5: success!!
         changePassword.setNewPassword(newPassword);
