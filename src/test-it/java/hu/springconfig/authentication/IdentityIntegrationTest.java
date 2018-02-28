@@ -20,6 +20,7 @@ import hu.springconfig.exception.*;
 import hu.springconfig.helper.CustomPageImpl;
 import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.service.mail.MailingService;
+import hu.springconfig.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,8 +39,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -120,6 +120,9 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     public void testIdentityFeaturesAdminRole() throws IOException {
         final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
         final Role adminRole = roleRepository.findOne(RoleService.ADMIN_ROLE_ID);
+        final Role managerRole = roleRepository.save(
+                new Role(500, "MANAGER", Collections.singleton(new Privilege(Privilege.Privileges.IDENTITY_GRANT)))
+        );
         final Set<Role> adminRoles = Collections.singleton(adminRole);
         final Set<Role> userRoles = Collections.singleton(userRole);
         final String password = "admin";
@@ -216,10 +219,50 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         List<IdentityDTO> content = page.getContent();
         assertPageResult(page, 5, 2, 9);
 
-        assertEquals("user1", content.get(0).getUsername());
+        IdentityDTO identity = content.get(0);
+        assertEquals("user1", identity.getUsername());
         assertEquals("user11", content.get(1).getUsername());
         assertEquals("user17", content.get(4).getUsername());
 
+        /*
+         * Update
+         */
+        IdentityUpdate update = new IdentityUpdate();
+        update.setEmail("user99@user.com");
+        update.setUsername("user99");
+
+        IdentityDTO updated = putForObject("/auth/" + identity.getId(), update, IdentityDTO.class);
+        assertIdentity(updated, identity.getId(), "user99", "user99@user.com", Collections.singleton(RoleService.USER_ROLE_ID));
+        /*
+         * Grant
+         */
+        Set<Integer> roleIds = new HashSet<>();
+        roleIds.add(managerRole.getId());
+        updated = restTemplate.postForObject("/auth/" + updated.getId() + "/grant", roleIds, IdentityDTO.class);
+        assertIdentity(updated,
+                identity.getId(),
+                "user99",
+                "user99@user.com",
+                (Set<Integer>) Util.CollectionBuilder.<Integer>newSet().add(userRole.getId()).add(managerRole.getId()).get()
+        );
+        /*
+         * Deny
+         */
+        roleIds = new HashSet<>();
+        roleIds.add(userRole.getId());
+        updated = restTemplate.postForObject("/auth/" + updated.getId() + "/deny", roleIds, IdentityDTO.class);
+        assertIdentity(updated,
+                identity.getId(),
+                "user99",
+                "user99@user.com",
+                Collections.singleton(managerRole.getId())
+        );
+        /*
+         * Delete
+         */
+        OKResponse response = deleteForObject("/auth/" + updated.getId(), OKResponse.class);
+        assertNotNull(response);
+        assertNull(identityRepository.findByUsername(updated.getUsername()));
     }
 
     private void assertPageResult(CustomPageImpl<IdentityDTO> identityPage, int numberOfElements, int totalPages, int totalElements) {
@@ -387,7 +430,6 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         securedUpdate.setPassword("wrongpw");
         securedUpdate.setValue(newUsername);
 
-//        Thread.sleep(1000);
         error = restTemplate.postForEntity("/auth/changeUsername", securedUpdate, APIError.class);
         assertError(error, "jwt.expired", InvalidTokenException.class, HttpStatus.UNAUTHORIZED);
 

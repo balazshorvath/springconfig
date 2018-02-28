@@ -6,4 +6,5 @@ import lombok.Data;
 public class IdentityUpdate {
     private String email;
     private String username;
+    private long version;
 }

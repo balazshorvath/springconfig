@@ -7,6 +7,7 @@ import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.authentication.RoleService;
+import hu.springconfig.validator.request.ConditionValidator;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,8 @@ public class IdentityController {
     private RoleService roleService;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private ConditionValidator conditionValidator;
 
     /* Standard user features */
 
@@ -92,7 +95,7 @@ public class IdentityController {
     @PutMapping("/auth/{id}")
     public IdentityDTO put(@PathVariable Long id, @RequestBody IdentityUpdate update, Authentication authentication) {
         return modelMapper.map(
-                identityService.updateIdentity((Identity) authentication.getPrincipal(), id, update.getUsername(), update.getEmail()),
+                identityService.updateIdentity((Identity) authentication.getPrincipal(), id, update.getUsername(), update.getEmail(), update.getVersion()),
                 IdentityDTO.class
         );
     }
@@ -107,6 +110,7 @@ public class IdentityController {
     @PreAuthorize("hasAuthority('IDENTITY_LIST')")
     @PostMapping("/auth/list")
     public Page<IdentityDTO> list(@RequestBody Condition condition, Pageable pageable) {
+        conditionValidator.validate(condition);
         return identityService.list(condition, pageable).map(source -> modelMapper.map(source, IdentityDTO.class));
     }
 

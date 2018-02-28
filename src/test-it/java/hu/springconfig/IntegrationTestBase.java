@@ -8,6 +8,8 @@ import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ResponseException;
+import hu.springconfig.validator.error.FieldValidationError;
+import hu.springconfig.validator.error.TypeValidationError;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -20,6 +22,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -88,9 +91,24 @@ public class IntegrationTestBase {
         assertNotNull(error);
         assertNotNull(error.getBody());
         assertEquals(status, error.getStatusCode());
-        assertEquals((Integer) status.value(), error.getBody().getStatus());
-        assertEquals(exception, error.getBody().getException());
-        assertEquals(message, error.getBody().getMessage());
+    }
+
+    protected void assertAPIError(APIError error, String message, Class<? extends ResponseException> exception, HttpStatus status) {
+        assertNotNull(error);
+        assertEquals((Integer) status.value(), error.getStatus());
+        assertEquals(exception, error.getException());
+        assertEquals(message, error.getMessage());
+    }
+
+    protected void assertValidationError(TypeValidationError error, String errorMessage, Class<?> type, FieldValidationError... fieldErrors) {
+        assertNotNull(error);
+        assertEquals(type, error.getType());
+        assertEquals(errorMessage, error.getMessage());
+        assertEquals(fieldErrors.length, error.getErrors().size());
+        Set<FieldValidationError> errorSet = new HashSet<>(error.getErrors());
+        for (FieldValidationError fieldValidationError : fieldErrors) {
+            assertTrue(errorSet.contains(fieldValidationError));
+        }
     }
 
     protected String createPageRequest(Integer page, Integer size, Pair... sorts) {

@@ -7,12 +7,11 @@ import lombok.EqualsAndHashCode;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Root;
-import javax.validation.constraints.NotNull;
 
 /**
  * Defines a condition for a field for supported types check
  * {@link SpecificationsUtils#createPredicateField(FieldCondition, Root, CriteriaBuilder)}
- *
+ * <p>
  * For foreign tables use fieldName.otherField
  * Example: user.id
  */
@@ -20,11 +19,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @JsonDeserialize
 public class FieldCondition extends Condition {
-    @NotNull
     protected String fieldName;
-    @NotNull
     protected RelationalOperator relationalOperator;
-    @NotNull
     protected Object value;
 
     public FieldCondition() {

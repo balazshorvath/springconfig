@@ -7,6 +7,7 @@ import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.mail.MailingService;
+import hu.springconfig.validator.error.FieldValidationError;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +97,12 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.password.invalid", exception.getMessage());
+        assertValidationError(
+                exception.getError(),
+                "identity.validation.error",
+                Identity.class,
+                new FieldValidationError("password", "identity.password.invalid")
+        );
     }
 
     @Test
@@ -108,7 +114,12 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.password.confirm.mismatch", exception.getMessage());
+        assertValidationError(
+                exception.getError(),
+                "identity.validation.error",
+                Identity.class,
+                new FieldValidationError("passwordConfirm", "identity.password.confirm.mismatch")
+        );
     }
 
     @Test
@@ -138,7 +149,12 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.username.invalid", exception.getMessage());
+        assertValidationError(
+                exception.getError(),
+                "identity.validation.error",
+                Identity.class,
+                new FieldValidationError("username", "identity.username.invalid")
+        );
     }
 
     @Test
@@ -168,7 +184,12 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.email.invalid", exception.getMessage());
+        assertValidationError(
+                exception.getError(),
+                "identity.validation.error",
+                Identity.class,
+                new FieldValidationError("email", "identity.email.invalid")
+        );
     }
 
     @Test
@@ -185,9 +206,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testUpdate() {
-        Identity updated = underTest.updateIdentity(admin, user.getId(), "somethingelse", "");
+        Identity updated = underTest.updateIdentity(admin, user.getId(), "somethingelse", user.getEmail(), user.getVersion());
         assertIdentity(updated, 20L, "somethingelse", user.getEmail(), "password", user.getRoles());
-        updated = underTest.updateIdentity(admin, user.getId(), "somethingelse1", "newmail@mail");
+        updated = underTest.updateIdentity(admin, user.getId(), "somethingelse1", "newmail@mail", user.getVersion());
         assertIdentity(updated, user.getId(), "somethingelse1", "newmail@mail", "password", user.getRoles());
     }
 
@@ -195,7 +216,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     public void testUpdateLowRank() {
         ForbiddenException exception = null;
         try {
-            underTest.updateIdentity(user, admin.getId(), "somethingelse", "");
+            underTest.updateIdentity(user, admin.getId(), "somethingelse", "", user.getVersion());
         } catch (ForbiddenException e) {
             exception = e;
         }
@@ -204,34 +225,45 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     }
 
     @Test
-    public void testUpdateInvalidUsername() {
+    public void testUpdateInvalidUsernameAndEmail() {
         BadRequestException exception = null;
         try {
-            underTest.updateIdentity(admin, user.getId(), "qwe", "");
+            underTest.updateIdentity(admin, user.getId(), "qwe", "", user.getVersion());
         } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.username.invalid", exception.getMessage());
+        assertValidationError(
+                exception.getError(),
+                "identity.validation.error",
+                Identity.class,
+                new FieldValidationError("username", "identity.username.invalid"),
+                new FieldValidationError("email", "identity.email.invalid")
+        );
     }
 
     @Test
     public void testUpdateInvalidEmail() {
         BadRequestException exception = null;
         try {
-            underTest.updateIdentity(admin, user.getId(), "", "asd");
+            underTest.updateIdentity(admin, user.getId(), user.getUsername(), "asd", user.getVersion());
         } catch (BadRequestException e) {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.email.invalid", exception.getMessage());
+        assertValidationError(
+                exception.getError(),
+                "identity.validation.error",
+                Identity.class,
+                new FieldValidationError("email", "identity.email.invalid")
+        );
     }
 
     @Test
     public void testUpdateEntityDoesNotExist() {
         NotFoundException exception = null;
         try {
-            underTest.updateIdentity(user, 10L, "somethingelse", "");
+            underTest.updateIdentity(user, 10L, "somethingelse", "", user.getVersion());
         } catch (NotFoundException e) {
             exception = e;
         }

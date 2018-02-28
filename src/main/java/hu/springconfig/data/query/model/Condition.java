@@ -4,12 +4,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import hu.springconfig.config.json.ConditionDeserializer;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
-
 @Data
 @JsonDeserialize(using = ConditionDeserializer.class)
 public abstract class Condition {
-    @NotNull
     protected Integer order;
 
     public Condition() {

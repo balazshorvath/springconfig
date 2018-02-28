@@ -52,4 +52,8 @@ public class Util {
         }
         return sb.toString();
     }
+
+    public static boolean checkCharset(String str, String charset) {
+        return str.matches("[" + charset + "]*");
+    }
 }

@@ -5,6 +5,8 @@ import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.service.authentication.RoleService;
+import hu.springconfig.validator.error.FieldValidationError;
+import hu.springconfig.validator.error.TypeValidationError;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -15,8 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 public class TestBase {
@@ -77,4 +78,14 @@ public class TestBase {
         assertTrue(encoder.matches(password, identity.getPassword()));
     }
 
+    public void assertValidationError(TypeValidationError error, String errorMessage, Class<?> type, FieldValidationError... fieldErrors) {
+        assertNotNull(error);
+        assertEquals(type, error.getType());
+        assertEquals(errorMessage, error.getMessage());
+        assertEquals(fieldErrors.length, error.getErrors().size());
+        Set<FieldValidationError> errorSet = new HashSet<>(error.getErrors());
+        for (FieldValidationError fieldValidationError : fieldErrors) {
+            assertTrue(errorSet.contains(fieldValidationError));
+        }
+    }
 }

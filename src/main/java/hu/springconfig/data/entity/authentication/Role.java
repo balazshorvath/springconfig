@@ -53,6 +53,12 @@ public class Role {
     @Version
     private long version;
 
+    public Role(Integer id, String role, Set<Privilege> privileges) {
+        this.id = id;
+        this.role = role;
+        this.privileges = privileges;
+    }
+
     public Collection<? extends GrantedAuthority> createGrantedAuthorities() {
         Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(Collectors.toList());
         authorities.add(new SimpleGrantedAuthority(role));

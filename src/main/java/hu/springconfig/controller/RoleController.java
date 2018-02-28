@@ -8,6 +8,7 @@ import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IPrivilegeRepository;
 import hu.springconfig.service.authentication.RoleService;
+import hu.springconfig.validator.request.ConditionValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,8 @@ public class RoleController {
     private RoleService roleService;
     @Autowired
     private IPrivilegeRepository privilegeRepository;
+    @Autowired
+    private ConditionValidator conditionValidator;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/role")
@@ -46,6 +49,7 @@ public class RoleController {
         privilegeRepository.findAll(update.getPrivileges()).forEach(privileges::add);
         return roleService.update(id, update.getId(), update.getRole(), privileges, update.getVersion());
     }
+
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/role/{id}")
     public OKResponse delete(@PathVariable Integer id) {
@@ -56,6 +60,7 @@ public class RoleController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/role/list")
     public Page<Role> list(@RequestBody Condition condition, Pageable pageable) {
+        conditionValidator.validate(condition);
         return roleService.list(condition, pageable);
     }
 }

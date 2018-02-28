@@ -2,7 +2,6 @@ package hu.springconfig.config.init;
 
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
-import hu.springconfig.data.repository.authentication.IPrivilegeRepository;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.authentication.RoleService;
@@ -11,7 +10,6 @@ import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -37,12 +35,13 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
      */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        try{
+        try {
             identityService.findByUsername("administrator");
-        }catch (NotFoundException e){
+        } catch (NotFoundException e) {
             String password = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
             Identity adminIdentity = new Identity();
             adminIdentity.setUsername("administrator");
+            adminIdentity.setEmail("nomail");
             adminIdentity.setPassword(encoder.encode(password));
             adminIdentity.setRoles(Collections.singleton(roleService.get(RoleService.ADMIN_ROLE_ID)));
             identityRepository.save(adminIdentity);
