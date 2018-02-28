@@ -107,6 +107,10 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         entity = new HttpEntity<>("{\"username\": \"user\", \"password\":\"admin\"}", headers);
         error = restTemplate.exchange("/auth", HttpMethod.POST, entity, APIError.class);
         assertError(error, "authentication.failed.credentials", AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED);
+
+        entity = new HttpEntity<>("{\"username\": \"uer\", \"password\":\"user\"}", headers);
+        error = restTemplate.exchange("/auth", HttpMethod.POST, entity, APIError.class);
+        assertError(error, "authentication.failed.credentials", AuthenticationFailedException.class, HttpStatus.UNAUTHORIZED);
         /*
          * Test valid credentials
          */
