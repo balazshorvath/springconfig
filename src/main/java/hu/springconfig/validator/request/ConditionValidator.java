@@ -3,7 +3,7 @@ package hu.springconfig.validator.request;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
-import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.ValidationException;
 import hu.springconfig.util.Util;
 import hu.springconfig.validator.ITypeValidator;
 import hu.springconfig.validator.error.FieldValidationError;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class ConditionValidator implements ITypeValidator<Condition> {
 
     @Override
-    public void validate(Condition condition) throws BadRequestException {
+    public void validate(Condition condition) throws ValidationException {
         if (condition instanceof ConditionSet) {
             validateConditionSet((ConditionSet) condition);
         } else {
@@ -22,7 +22,7 @@ public class ConditionValidator implements ITypeValidator<Condition> {
         }
     }
 
-    private void validateFieldCondition(FieldCondition condition) throws BadRequestException {
+    private void validateFieldCondition(FieldCondition condition) throws ValidationException {
         TypeValidationError typeValidationError = validateCondition(condition);
         if (!Util.notNullAndNotEmpty(condition.getFieldName())) {
             typeValidationError.getErrors().add(
@@ -40,11 +40,11 @@ public class ConditionValidator implements ITypeValidator<Condition> {
             );
         }
         if (typeValidationError.getErrors().size() > 0) {
-            throw new BadRequestException("condition.validation.error", typeValidationError);
+            throw new ValidationException("condition.validation.error", typeValidationError);
         }
     }
 
-    private void validateConditionSet(ConditionSet condition) throws BadRequestException {
+    private void validateConditionSet(ConditionSet condition) throws ValidationException {
         TypeValidationError typeValidationError = validateCondition(condition);
         if (condition.getLogicalOperator() == null) {
             typeValidationError.getErrors().add(
@@ -60,7 +60,7 @@ public class ConditionValidator implements ITypeValidator<Condition> {
         for (Condition condition1 : condition.getConditions()) {
             try {
                 validate(condition1);
-            } catch (BadRequestException exception) {
+            } catch (ValidationException exception) {
                 typeValidationError.getErrors().addAll(exception.getError().getErrors());
             }
             // STOP! JUST STOP!!?44!!
@@ -70,7 +70,7 @@ public class ConditionValidator implements ITypeValidator<Condition> {
         }
 
         if (typeValidationError.getErrors().size() > 0) {
-            throw new BadRequestException("condition.validation.error", typeValidationError);
+            throw new ValidationException("condition.validation.error", typeValidationError);
         }
     }
 

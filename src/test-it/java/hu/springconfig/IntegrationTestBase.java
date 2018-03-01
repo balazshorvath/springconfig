@@ -6,7 +6,10 @@ import hu.springconfig.config.error.APIError;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
+import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.data.repository.authentication.IIdentityRepository;
+import hu.springconfig.data.repository.authentication.IRoleRepository;
 import hu.springconfig.exception.ResponseException;
 import hu.springconfig.validator.error.FieldValidationError;
 import hu.springconfig.validator.error.TypeValidationError;
@@ -19,6 +22,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,6 +36,12 @@ public class IntegrationTestBase {
     protected TestRestTemplate restTemplate;
     @Autowired
     protected ObjectMapper objectMapper;
+    @Autowired
+    protected PasswordEncoder encoder;
+    @Autowired
+    protected IRoleRepository roleRepository;
+    @Autowired
+    protected IIdentityRepository identityRepository;
 
     @Before
     public void setup() {
@@ -119,6 +129,17 @@ public class IntegrationTestBase {
             sb.append('&').append("sort=").append(sort.getFirst()).append(',').append(sort.getSecond());
         }
         return sb.toString();
+    }
+
+    protected Identity addIdentity(Set<Role> userRoles, String username, String email) {
+        Identity identity = new Identity();
+
+        identity.setPassword(encoder.encode(username));
+        identity.setEmail(email);
+        identity.setUsername(username);
+        identity.setRoles(userRoles);
+
+        return identityRepository.save(identity);
     }
 
     protected <T> ResponseEntity<T> putForEntity(String url, Object request, Class<T> responseType) throws IOException {

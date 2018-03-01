@@ -3,9 +3,9 @@ package hu.springconfig.service.authentication;
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
+import hu.springconfig.exception.ValidationException;
 import hu.springconfig.service.mail.MailingService;
 import hu.springconfig.validator.error.FieldValidationError;
 import org.junit.Test;
@@ -90,10 +90,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testChangePasswordInvalid() {
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.changePassword(user, "password", "ne", "ne");
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -107,10 +107,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testChangePasswordConfirmInvalid() {
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.changePassword(user, "password", "newp", "newpassword");
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -142,10 +142,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testChangeUsernameSelfInvalid() {
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.changeUsernameSelf(user, "password", "use+rname");
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -177,10 +177,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testChangeEmailSelfInvalid() {
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.changeEmailSelf(user, "password", "us");
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -226,10 +226,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testUpdateInvalidUsernameAndEmail() {
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.updateIdentity(admin, user.getId(), "qwe", "", user.getVersion());
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -244,10 +244,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
 
     @Test
     public void testUpdateInvalidEmail() {
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.updateIdentity(admin, user.getId(), user.getUsername(), "asd", user.getVersion());
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);

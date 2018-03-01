@@ -3,7 +3,7 @@ package hu.springconfig.service.authentication;
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.ValidationException;
 import hu.springconfig.validator.error.FieldValidationError;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,10 +48,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "user@mail.com";
         final String password = "user";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -69,10 +69,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "user@mail.com";
         final String password = "use~r";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -90,10 +90,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "user@mail.com";
         final String password = "use~r";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -111,10 +111,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "user@mail.com";
         final String password = "us---er";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -132,10 +132,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "";
         final String password = "useruseruseruseruseruseruseruser";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -153,10 +153,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "u@l";
         final String password = "u+%=se~r";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -174,10 +174,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "uhhh345567gfd3..g.dfdf2hh53h5f7d4h6d7hhhdfhoqkw@asfuuahsha214kcacsl.vobm";
         final String password = "u+%=se~r";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -195,10 +195,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "ue.r@mail.com";
         final String password = "a";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -216,10 +216,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "u@l";
         final String password = "asd";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -238,10 +238,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "uhhh345567gfd3@srszhr.vobm";
         final String password = "looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, password);
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -259,10 +259,10 @@ public class IdentityServiceCreateTest extends TestBase {
         final String email = "user@mail.com";
         final String password = "use!\"r";
 
-        BadRequestException exception = null;
+        ValidationException exception = null;
         try {
             underTest.createIdentity(username, email, password, "asdasd");
-        } catch (BadRequestException e) {
+        } catch (ValidationException e) {
             exception = e;
         }
         assertNotNull(exception);

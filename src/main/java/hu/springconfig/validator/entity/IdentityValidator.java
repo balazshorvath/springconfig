@@ -2,7 +2,7 @@ package hu.springconfig.validator.entity;
 
 import hu.springconfig.config.message.MessageProvider;
 import hu.springconfig.data.entity.authentication.Identity;
-import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.ValidationException;
 import hu.springconfig.util.Util;
 import hu.springconfig.validator.ITypeValidator;
 import hu.springconfig.validator.error.FieldValidationError;
@@ -38,7 +38,7 @@ public class IdentityValidator implements ITypeValidator<Identity> {
     private MessageProvider messageProvider;
 
     @Override
-    public void validate(Identity entity) throws BadRequestException {
+    public void validate(Identity entity) throws ValidationException {
         TypeValidationError typeValidationError = createTypeValidationError();
         FieldValidationError error = validateEmail(entity.getEmail());
         if (error != null) {
@@ -49,11 +49,11 @@ public class IdentityValidator implements ITypeValidator<Identity> {
             typeValidationError.getErrors().add(error);
         }
         if (typeValidationError.getErrors().size() > 0) {
-            throw new BadRequestException("identity.validation.error", typeValidationError);
+            throw new ValidationException("identity.validation.error", typeValidationError);
         }
     }
 
-    public void validateWithPasswords(Identity entity, String password, String passwordConfirm) throws BadRequestException {
+    public void validateWithPasswords(Identity entity, String password, String passwordConfirm) throws ValidationException {
         TypeValidationError typeValidationError = createTypeValidationError();
         FieldValidationError error = validateEmail(entity.getEmail());
         if (error != null) {
@@ -68,7 +68,7 @@ public class IdentityValidator implements ITypeValidator<Identity> {
             typeValidationError.getErrors().add(error);
         }
         if (typeValidationError.getErrors().size() > 0) {
-            throw new BadRequestException("identity.validation.error", typeValidationError);
+            throw new ValidationException("identity.validation.error", typeValidationError);
         }
     }
 

@@ -1,6 +1,6 @@
 package hu.springconfig.config.error;
 
-import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.ValidationException;
 import hu.springconfig.validator.error.TypeValidationError;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +10,7 @@ import lombok.Setter;
 public class APIValidationError extends APIError {
     TypeValidationError error;
 
-    public APIValidationError(BadRequestException e) {
+    public APIValidationError(ValidationException e) {
         super(e);
         this.error = e.getError();
     }
