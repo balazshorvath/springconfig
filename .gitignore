@@ -2,3 +2,4 @@
 .gradle
 build
 out
+config/application.properties
