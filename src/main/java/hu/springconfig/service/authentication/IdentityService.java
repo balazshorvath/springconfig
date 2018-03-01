@@ -107,6 +107,9 @@ public class IdentityService extends LoggingComponent {
         if (identity.isSuperiorTo(current)) {
             throw new ForbiddenException("identity.low_rank");
         }
+        if (Util.notNullAndNotEmpty(username)) {
+            current.setTokenExpiration(System.currentTimeMillis());
+        }
         identity.setUsername(username);
         identity.setEmail(email);
         identity.setVersion(version);
