@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +29,7 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/role")
-    public Role create(@RequestBody @Valid RoleCreate create) {
+    public Role create(@RequestBody RoleCreate create) {
         Set<Privilege> privileges = new HashSet<>();
         privilegeRepository.findAll(create.getPrivileges()).forEach(privileges::add);
         return roleService.create(create.getId(), create.getRole(), privileges);

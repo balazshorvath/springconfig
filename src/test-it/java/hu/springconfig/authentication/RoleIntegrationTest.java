@@ -2,13 +2,16 @@ package hu.springconfig.authentication;
 
 import hu.springconfig.Application;
 import hu.springconfig.IntegrationTestBase;
+import hu.springconfig.config.error.APIError;
 import hu.springconfig.data.dto.authentication.role.RoleCreate;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.exception.BadRequestException;
 import hu.springconfig.service.authentication.RoleService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
@@ -32,10 +35,18 @@ public class RoleIntegrationTest extends IntegrationTestBase {
         /*
          * Create role
          */
-        RoleCreate create = new RoleCreate();
-        create.setId(20);
         // Invalid JSON
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>("{qwe}", headers);
+        ResponseEntity<APIError> error = restTemplate.exchange("/role", HttpMethod.POST, entity, APIError.class);
+        assertError(error, "http.bad.request", BadRequestException.class, HttpStatus.BAD_REQUEST);
+
         // Empty role name and id
+        RoleCreate create = new RoleCreate();
+        error = restTemplate.postForEntity("/role", create, APIError.class);
+        assertError(error, "");
         // Success
         /*
          * Assign additional privileges

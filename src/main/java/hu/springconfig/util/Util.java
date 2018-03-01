@@ -13,6 +13,11 @@ public class Util {
         return str != null && !str.isEmpty();
     }
 
+    public static boolean validateString(String str, Integer minLength, Integer maxLength, String charset) {
+        return notNullAndNotEmpty(str) && str.length() >= minLength && str.length() <= maxLength
+                && (charset == null || checkCharset(str, charset));
+    }
+
     public static boolean notNullAndNotEmpty(Collection collection) {
         return collection != null && !collection.isEmpty();
     }

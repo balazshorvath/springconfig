@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import static hu.springconfig.util.Util.checkCharset;
-
 @Component
 public class IdentityValidator implements ITypeValidator<Identity> {
     @Value("${password.length.min}")
@@ -54,27 +52,15 @@ public class IdentityValidator implements ITypeValidator<Identity> {
     }
 
     public void validateWithPasswords(Identity entity, String password, String passwordConfirm) throws ValidationException {
-        TypeValidationError typeValidationError = createTypeValidationError();
-        FieldValidationError error = validateEmail(entity.getEmail());
-        if (error != null) {
-            typeValidationError.getErrors().add(error);
-        }
-        error = validateUsername(entity.getUsername());
-        if (error != null) {
-            typeValidationError.getErrors().add(error);
-        }
-        error = validatePasswordConfirm(password, passwordConfirm);
-        if (error != null) {
-            typeValidationError.getErrors().add(error);
-        }
-        if (typeValidationError.getErrors().size() > 0) {
-            throw new ValidationException("identity.validation.error", typeValidationError);
-        }
+        TypeValidationError error = createTypeValidationError();
+        error.addErrorIfNotNull(validateEmail(entity.getEmail()));
+        error.addErrorIfNotNull(validateUsername(entity.getUsername()));
+        error.addErrorIfNotNull(validatePasswordConfirm(password, passwordConfirm));
+        checkResult(error);
     }
 
-    public FieldValidationError validatePasswordConfirm(String password, String passwordConfirm) {
-        if (!Util.notNullAndNotEmpty(password) || password.length() < passwordMin || password.length() > passwordMax
-                || !checkCharset(password, passwordCharset)) {
+    private FieldValidationError validatePasswordConfirm(String password, String passwordConfirm) {
+        if (!Util.validateString(password, passwordMin, passwordMax, passwordCharset)) {
             return new FieldValidationError("password", "identity.password.invalid");
         }
         if (!password.equals(passwordConfirm)) {
@@ -83,16 +69,15 @@ public class IdentityValidator implements ITypeValidator<Identity> {
         return null;
     }
 
-    public FieldValidationError validateUsername(String username) {
-        if (!Util.notNullAndNotEmpty(username) || username.length() < usernameMin || username.length() > usernameMax
-                || !checkCharset(username, usernameCharset)) {
+    private FieldValidationError validateUsername(String username) {
+        if (!Util.validateString(username, usernameMin, usernameMax, usernameCharset)) {
             return new FieldValidationError("username", "identity.username.invalid");
         }
         return null;
     }
 
-    public FieldValidationError validateEmail(String email) {
-        if (!Util.notNullAndNotEmpty(email) || email.length() < emailMin || email.length() > emailMax) {
+    private FieldValidationError validateEmail(String email) {
+        if (!Util.validateString(email, emailMin, emailMax, null)) {
             return new FieldValidationError("email", "identity.email.invalid");
         }
         return null;

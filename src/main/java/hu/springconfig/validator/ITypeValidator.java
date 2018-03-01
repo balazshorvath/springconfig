@@ -18,4 +18,10 @@ public interface ITypeValidator<T> {
         Class<T> type = getType();
         return new TypeValidationError(type, type.getSimpleName().toLowerCase() + ".validation.error", new ArrayList<>());
     }
+
+    default void checkResult(TypeValidationError error) throws ValidationException {
+        if (error.getErrors().size() > 0) {
+            throw new ValidationException("identity.validation.error", error);
+        }
+    }
 }

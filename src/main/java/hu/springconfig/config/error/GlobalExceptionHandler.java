@@ -32,6 +32,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(exception, error, headers, exception.getStatus(), request);
     }
 
+    @ExceptionHandler(value = ValidationException.class)
+    public ResponseEntity<Object> handleValidationException(ValidationException exception, WebRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        APIValidationError error = new APIValidationError(exception);
+        error.setMessage(messageProvider.getMessage(exception.getMessage()));
+        return handleExceptionInternal(exception, error, headers, exception.getStatus(), request);
+    }
+
     @ExceptionHandler(value = AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException exception, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
@@ -65,9 +73,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException exception, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         APIError error = new APIError(new ValidationException(exception.getMessage(), exception));
-        error.setMessage(messageProvider.getMessage("http.internal.error"));
+        error.setMessage(messageProvider.getMessage("http.conflict.error"));
         return handleExceptionInternal(exception, error, headers, HttpStatus.CONFLICT, request);
     }
+
 
     @ExceptionHandler(value = PropertyReferenceException.class)
     public ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException exception, WebRequest request) {

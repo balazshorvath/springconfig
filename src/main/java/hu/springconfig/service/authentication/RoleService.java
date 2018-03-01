@@ -8,6 +8,7 @@ import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
+import hu.springconfig.validator.entity.RoleValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,9 @@ public class RoleService {
 
     @Autowired
     private IRoleRepository roleRepository;
+    @Autowired
+    private RoleValidator validator;
+
 
     public Set<Role> getRoles(Set<Integer> roleIds) {
         return roleIds.stream().map(this::get).collect(Collectors.toSet());
@@ -42,6 +46,11 @@ public class RoleService {
         role.setId(id);
         role.setRole(roleName);
         role.setPrivileges(privileges);
+        return save(role);
+    }
+
+    private Role save(Role role) {
+        validator.validate(role);
         return roleRepository.save(role);
     }
 
@@ -74,7 +83,7 @@ public class RoleService {
         if (Util.notNullAndNotEmpty(privileges)) {
             role.setPrivileges(privileges);
         }
-        return roleRepository.save(role);
+        return save(role);
     }
 
     public Page<Role> list(Condition condition, Pageable pageable) {
