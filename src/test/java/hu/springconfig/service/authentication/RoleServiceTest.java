@@ -1,6 +1,7 @@
 package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
+import hu.springconfig.config.message.RoleMessages;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
@@ -22,9 +23,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -41,7 +40,8 @@ public class RoleServiceTest {
 
     @Before
     public void setup() {
-        Set<Privilege> adminPrivileges = Arrays.stream(Privilege.Privileges.values()).map(Privilege::new).collect(Collectors.toSet());
+        Set<Privilege> adminPrivileges = Arrays.stream(Privilege.Privileges.values()).map(Privilege::new).collect(
+                Collectors.toSet());
 
         adminRole.setId(RoleService.ADMIN_ROLE_ID);
         adminRole.setPrivileges(adminPrivileges);
@@ -74,7 +74,7 @@ public class RoleServiceTest {
 
         Set<Privilege> privileges = new HashSet<>();
         privileges.add(new Privilege(Privilege.Privileges.IDENTITY_GET));
-        Role updated = underTest.update(role.getId(),null,  "USER_1", privileges, 1);
+        Role updated = underTest.update(role.getId(), null, "USER_1", privileges, 1);
 
         assertRole(updated, role.getId(), "USER_1", privileges);
     }
@@ -86,7 +86,7 @@ public class RoleServiceTest {
         role.setRole("USER_2");
         when(roleRepository.findOne(role.getId())).thenReturn(role);
 
-        Role updated = underTest.update(role.getId(),11,  "USER_1", null, 1);
+        Role updated = underTest.update(role.getId(), 11, "USER_1", null, 1);
 
         assertRole(updated, 11, "USER_1", null);
         verify(roleRepository, times(1)).delete(10);
@@ -95,25 +95,25 @@ public class RoleServiceTest {
     @Test
     public void testUpdateStaticId() {
         ForbiddenException exception = null;
-        try{
-            underTest.update(userRole.getId(),11,  "USER_1", null, 1);
-        } catch (ForbiddenException e){
+        try {
+            underTest.update(userRole.getId(), 11, "USER_1", null, 1);
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("role.id.static", exception.getMessage());
+        assertEquals(RoleMessages.ROLE_ID_STATIC, exception.getMessage());
     }
 
     @Test
     public void testUpdateStaticName() {
         ForbiddenException exception = null;
-        try{
-            underTest.update(userRole.getId(),null,  "USER_1", null, 1);
-        } catch (ForbiddenException e){
+        try {
+            underTest.update(userRole.getId(), null, "USER_1", null, 1);
+        } catch (ForbiddenException e) {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("role.role_name.static", exception.getMessage());
+        assertEquals(RoleMessages.ROLE_ROLE_NAME_STATIC, exception.getMessage());
     }
 
     private void assertRole(Role role, Integer id, String roleName, Set<Privilege> privileges) {

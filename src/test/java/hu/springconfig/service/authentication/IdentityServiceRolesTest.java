@@ -2,6 +2,7 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
+import hu.springconfig.config.message.IdentityMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ForbiddenException;
@@ -78,7 +79,7 @@ public class IdentityServiceRolesTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.low_rank", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_LOW_RANK, exception.getMessage());
         exception = null;
         // Identity tries to deny a role from an identity with higher rank
         try {
@@ -87,7 +88,7 @@ public class IdentityServiceRolesTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.low_rank", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_LOW_RANK, exception.getMessage());
         exception = null;
     }
 
@@ -126,7 +127,7 @@ public class IdentityServiceRolesTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.low_rank", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_LOW_RANK, exception.getMessage());
         exception = null;
         // Identity tries to grant a role to an identity with higher rank
         try {
@@ -135,7 +136,7 @@ public class IdentityServiceRolesTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.low_rank", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_LOW_RANK, exception.getMessage());
         exception = null;
     }
 

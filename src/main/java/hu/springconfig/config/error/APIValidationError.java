@@ -3,10 +3,13 @@ package hu.springconfig.config.error;
 import hu.springconfig.exception.ValidationException;
 import hu.springconfig.validator.error.TypeValidationError;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 
 @Setter
 @Getter
+@NoArgsConstructor
 public class APIValidationError extends APIError {
     TypeValidationError error;
 

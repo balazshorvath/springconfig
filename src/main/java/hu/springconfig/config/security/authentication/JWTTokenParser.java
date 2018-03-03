@@ -1,6 +1,7 @@
 package hu.springconfig.config.security.authentication;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.springconfig.config.message.AuthenticationMessages;
 import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
@@ -42,8 +43,8 @@ public class JWTTokenParser extends LoggingComponent {
     public void createAndSetToken(HttpServletResponse response, Identity identity) {
         long timestamp = System.currentTimeMillis();
         Claims claims = Jwts.claims()
-                .setExpiration(new Date(timestamp + expirationTime))
-                .setSubject(identity.getUsername());
+                            .setExpiration(new Date(timestamp + expirationTime))
+                            .setSubject(identity.getUsername());
         claims.put("id", identity.getId());
         claims.put("generated", timestamp);
 
@@ -54,9 +55,9 @@ public class JWTTokenParser extends LoggingComponent {
             TokenResponse response1 = new TokenResponse();
             response1.identity = modelMapper.map(identity, IdentityDTO.class);
             response1.token = Jwts.builder()
-                            .setClaims(claims)
-                            .signWith(SignatureAlgorithm.HS512, signatureSecret)
-                            .compact();
+                                  .setClaims(claims)
+                                  .signWith(SignatureAlgorithm.HS512, signatureSecret)
+                                  .compact();
 
             ServletOutputStream out = response.getOutputStream();
             out.println(objectMapper.writeValueAsString(response1));
@@ -76,13 +77,13 @@ public class JWTTokenParser extends LoggingComponent {
         Claims claims;
         try {
             claims = Jwts.parser()
-                    .setSigningKey(signatureSecret)
-                    .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
-                    .getBody();
-        }catch (ExpiredJwtException e){
-            throw new InvalidTokenException("jwt.expired");
-        }catch (ClaimJwtException e){
-            throw new InvalidTokenException("jwt.invalid");
+                         .setSigningKey(signatureSecret)
+                         .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
+                         .getBody();
+        } catch (ExpiredJwtException e) {
+            throw new InvalidTokenException(AuthenticationMessages.JWT_EXPIRED);
+        } catch (ClaimJwtException e) {
+            throw new InvalidTokenException(AuthenticationMessages.JWT_INVALID);
         }
         String user = claims.getSubject();
         Long id = claims.get("id", Long.class);
@@ -91,11 +92,12 @@ public class JWTTokenParser extends LoggingComponent {
         }
         Long generated = claims.get("generated", Long.class);
         Identity identity = identityRepository.findOne(id);
-        if (identity.getTokenExpiration() != null && identity.getTokenExpiration() > generated){
-            throw new InvalidTokenException("jwt.expired");
+        if (identity.getTokenExpiration() != null && identity.getTokenExpiration() > generated) {
+            throw new InvalidTokenException(AuthenticationMessages.JWT_EXPIRED);
         }
         return identity;
     }
+
     @Data
     public static class TokenResponse {
         private String token;

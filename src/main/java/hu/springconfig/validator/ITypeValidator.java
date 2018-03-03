@@ -21,7 +21,7 @@ public interface ITypeValidator<T> {
 
     default void checkResult(TypeValidationError error) throws ValidationException {
         if (error.getErrors().size() > 0) {
-            throw new ValidationException("identity.validation.error", error);
+            throw new ValidationException(getType().getSimpleName().toLowerCase() + ".validation.error", error);
         }
     }
 }

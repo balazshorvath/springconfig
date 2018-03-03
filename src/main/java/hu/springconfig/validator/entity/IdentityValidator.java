@@ -1,5 +1,6 @@
 package hu.springconfig.validator.entity;
 
+import hu.springconfig.config.message.IdentityMessages;
 import hu.springconfig.config.message.MessageProvider;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.ValidationException;
@@ -47,11 +48,12 @@ public class IdentityValidator implements ITypeValidator<Identity> {
             typeValidationError.getErrors().add(error);
         }
         if (typeValidationError.getErrors().size() > 0) {
-            throw new ValidationException("identity.validation.error", typeValidationError);
+            throw new ValidationException(IdentityMessages.IDENTITY_VALIDATION_ERROR, typeValidationError);
         }
     }
 
-    public void validateWithPasswords(Identity entity, String password, String passwordConfirm) throws ValidationException {
+    public void validateWithPasswords(Identity entity, String password, String passwordConfirm) throws
+            ValidationException {
         TypeValidationError error = createTypeValidationError();
         error.addErrorIfNotNull(validateEmail(entity.getEmail()));
         error.addErrorIfNotNull(validateUsername(entity.getUsername()));
@@ -61,24 +63,24 @@ public class IdentityValidator implements ITypeValidator<Identity> {
 
     private FieldValidationError validatePasswordConfirm(String password, String passwordConfirm) {
         if (!Util.validateString(password, passwordMin, passwordMax, passwordCharset)) {
-            return new FieldValidationError("password", "identity.password.invalid");
+            return new FieldValidationError("password", IdentityMessages.IDENTITY_PASSWORD_INVALID);
         }
         if (!password.equals(passwordConfirm)) {
-            return new FieldValidationError("passwordConfirm", "identity.password.confirm.mismatch");
+            return new FieldValidationError("passwordConfirm", IdentityMessages.IDENTITY_PASSWORD_CONFIRM_MISMATCH);
         }
         return null;
     }
 
     private FieldValidationError validateUsername(String username) {
         if (!Util.validateString(username, usernameMin, usernameMax, usernameCharset)) {
-            return new FieldValidationError("username", "identity.username.invalid");
+            return new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID);
         }
         return null;
     }
 
     private FieldValidationError validateEmail(String email) {
         if (!Util.validateString(email, emailMin, emailMax, null)) {
-            return new FieldValidationError("email", "identity.email.invalid");
+            return new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID);
         }
         return null;
     }

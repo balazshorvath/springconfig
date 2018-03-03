@@ -2,6 +2,7 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
+import hu.springconfig.config.message.IdentityMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
@@ -40,7 +41,8 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         admin = createIdentity(21L, "admin", "admin@email", "password", userRole, adminRole);
         mockIdentityDatabase(user, admin);
 
-        when(identityRepository.save(any(Identity.class))).thenAnswer(invocation -> new Identity(invocation.getArgument(0)));
+        when(identityRepository.save(any(Identity.class))).thenAnswer(invocation -> new Identity(invocation.getArgument(
+                0)));
     }
 
     @Test
@@ -58,7 +60,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.low_rank", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_LOW_RANK, exception.getMessage());
     }
 
     @Test
@@ -70,7 +72,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.not_found", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_NOT_FOUND, exception.getMessage());
     }
 
     @Test
@@ -99,9 +101,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("password", "identity.password.invalid")
+                new FieldValidationError("password", IdentityMessages.IDENTITY_PASSWORD_INVALID)
         );
     }
 
@@ -116,9 +118,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("passwordConfirm", "identity.password.confirm.mismatch")
+                new FieldValidationError("passwordConfirm", IdentityMessages.IDENTITY_PASSWORD_CONFIRM_MISMATCH)
         );
     }
 
@@ -131,7 +133,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.check_password_failed", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, exception.getMessage());
     }
 
     @Test
@@ -151,9 +153,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", "identity.username.invalid")
+                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
         );
     }
 
@@ -166,7 +168,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.check_password_failed", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, exception.getMessage());
     }
 
     @Test
@@ -186,9 +188,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -201,12 +203,18 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.check_password_failed", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, exception.getMessage());
     }
 
     @Test
     public void testUpdate() {
-        Identity updated = underTest.updateIdentity(admin, user.getId(), "somethingelse", user.getEmail(), user.getVersion());
+        Identity updated = underTest.updateIdentity(
+                admin,
+                user.getId(),
+                "somethingelse",
+                user.getEmail(),
+                user.getVersion()
+        );
         assertIdentity(updated, 20L, "somethingelse", user.getEmail(), "password", user.getRoles());
         updated = underTest.updateIdentity(admin, user.getId(), "somethingelse1", "newmail@mail", user.getVersion());
         assertIdentity(updated, user.getId(), "somethingelse1", "newmail@mail", "password", user.getRoles());
@@ -221,7 +229,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.low_rank", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_LOW_RANK, exception.getMessage());
     }
 
     @Test
@@ -235,10 +243,10 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", "identity.username.invalid"),
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID),
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -253,9 +261,9 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -268,6 +276,6 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
             exception = e;
         }
         assertNotNull(exception);
-        assertEquals("identity.not_found", exception.getMessage());
+        assertEquals(IdentityMessages.IDENTITY_NOT_FOUND, exception.getMessage());
     }
 }

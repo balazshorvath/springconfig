@@ -6,7 +6,7 @@ import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
-import hu.springconfig.service.base.LoggingComponent;
+import hu.springconfig.service.base.EntityService;
 import hu.springconfig.service.mail.MailingService;
 import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
@@ -14,6 +14,7 @@ import hu.springconfig.validator.entity.IdentityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +22,12 @@ import javax.transaction.Transactional;
 import java.util.Collections;
 import java.util.Set;
 
+import static hu.springconfig.config.message.IdentityMessages.*;
+
 @Service
 @Transactional
-public class IdentityService extends LoggingComponent {
+public class IdentityService extends EntityService<Identity, Long> {
+
     @Autowired
     private IIdentityRepository identityRepository;
     @Autowired
@@ -41,12 +45,12 @@ public class IdentityService extends LoggingComponent {
         // If the identity has higher ranks, than the current
         if (grantTo.isSuperiorTo(current)) {
             /* Current user is not allowed to update user, because the target has a higher rank. */
-            throw new ForbiddenException("identity.low_rank");
+            throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
         Role highest = current.getHighestRole();
         if (roles.stream().anyMatch(role -> role.getId() > highest.getId())) {
             /* Cannot grant roles higher, than own rank. */
-            throw new ForbiddenException("identity.low_rank");
+            throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
         grantTo.getRoles().addAll(roles);
         return save(grantTo);
@@ -57,12 +61,12 @@ public class IdentityService extends LoggingComponent {
         // If the identity has higher ranks, than the current
         if (denyFrom.isSuperiorTo(current)) {
             /* Current user is not allowed to update user, because the target has a higher rank. */
-            throw new ForbiddenException("identity.low_rank");
+            throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
         Role highest = current.getHighestRole();
         if (roles.stream().anyMatch(role -> role.getId() > highest.getId())) {
             /* Cannot deny roles higher, than own rank. */
-            throw new ForbiddenException("identity.low_rank");
+            throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
         denyFrom.getRoles().removeAll(roles);
         return save(denyFrom);
@@ -92,7 +96,7 @@ public class IdentityService extends LoggingComponent {
     public Identity resetPassword(String email, String username) {
         Identity identity = findByUsername(username);
         if (!Util.notNullAndNotEmpty(email) || !email.equals(identity.getEmail())) {
-            throw new ForbiddenException("identity.reset_password_failed");
+            throw new ForbiddenException(IDENTITY_RESET_PASSWORD_FAILED);
         }
 
         String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
@@ -105,7 +109,7 @@ public class IdentityService extends LoggingComponent {
     public Identity updateIdentity(Identity current, Long id, String username, String email, long version) {
         Identity identity = get(id);
         if (identity.isSuperiorTo(current)) {
-            throw new ForbiddenException("identity.low_rank");
+            throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
         if (Util.notNullAndNotEmpty(username)) {
             current.setTokenExpiration(System.currentTimeMillis());
@@ -114,19 +118,6 @@ public class IdentityService extends LoggingComponent {
         identity.setEmail(email);
         identity.setVersion(version);
         return save(identity);
-    }
-
-    private Identity save(Identity identity) {
-        validator.validate(identity);
-        return identityRepository.save(identity);
-    }
-
-    public Identity get(Long id) {
-        Identity identity = identityRepository.findOne(id);
-        if (identity == null) {
-            throw new NotFoundException("identity.not_found");
-        }
-        return identity;
     }
 
     public Identity createIdentity(String username, String email, String password, String passwordConfirm) {
@@ -143,7 +134,7 @@ public class IdentityService extends LoggingComponent {
     public void delete(Identity current, Long id) {
         Identity identity = get(id);
         if (identity.isSuperiorTo(current)) {
-            throw new ForbiddenException("identity.low_rank");
+            throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
         identityRepository.delete(id);
     }
@@ -151,14 +142,14 @@ public class IdentityService extends LoggingComponent {
     public Identity findByUsername(String username) {
         Identity identity = identityRepository.findByUsername(username);
         if (identity == null) {
-            throw new NotFoundException("identity.not_found");
+            throw new NotFoundException(IDENTITY_NOT_FOUND);
         }
         return identity;
     }
 
     private void checkPassword(Identity identity, String password) {
         if (!Util.notNullAndNotEmpty(password) || !encoder.matches(password, identity.getPassword())) {
-            throw new ForbiddenException("identity.check_password_failed");
+            throw new ForbiddenException(IDENTITY_CHECK_PASSWORD_FAILED);
         }
     }
 
@@ -167,5 +158,15 @@ public class IdentityService extends LoggingComponent {
                 SpecificationsUtils.withQuery(condition),
                 pageable
         );
+    }
+
+    @Override
+    protected CrudRepository<Identity, Long> getRepository() {
+        return identityRepository;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return ENTITY_NAME;
     }
 }

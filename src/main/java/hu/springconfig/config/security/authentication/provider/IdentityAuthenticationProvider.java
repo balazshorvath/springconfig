@@ -1,5 +1,6 @@
 package hu.springconfig.config.security.authentication.provider;
 
+import hu.springconfig.config.message.AuthenticationMessages;
 import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.entity.authentication.Identity;
@@ -33,11 +34,11 @@ public class IdentityAuthenticationProvider implements AuthenticationProvider {
         String username = credentials.getUsername();
         String password = credentials.getPassword();
         if (!Util.notNullAndNotEmpty(username) && !Util.notNullAndNotEmpty(password)) {
-            throw new BadCredentialsException("authentication.failed.credentials");
+            throw new BadCredentialsException(AuthenticationMessages.AUTHENTICATION_FAILED_CREDENTIALS);
         }
         Identity identity = (Identity) userDetailsService.loadUserByUsername(username);
         if (identity == null || !passwordEncoder.matches(credentials.getPassword(), identity.getPassword())) {
-            throw new BadCredentialsException("authentication.failed.credentials");
+            throw new BadCredentialsException(AuthenticationMessages.AUTHENTICATION_FAILED_CREDENTIALS);
         }
         identity.setPassword(null);
         return new JWTAuthenticationToken(identity, credentials, identity.getAuthorities());

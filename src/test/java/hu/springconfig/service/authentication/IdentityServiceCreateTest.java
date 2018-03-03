@@ -2,6 +2,7 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
+import hu.springconfig.config.message.IdentityMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.ValidationException;
 import hu.springconfig.validator.error.FieldValidationError;
@@ -57,9 +58,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", "identity.username.invalid")
+                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
         );
     }
 
@@ -78,9 +79,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", "identity.username.invalid")
+                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
         );
     }
 
@@ -99,9 +100,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", "identity.username.invalid")
+                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
         );
     }
 
@@ -120,9 +121,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", "identity.username.invalid")
+                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
         );
     }
 
@@ -141,9 +142,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -162,9 +163,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -183,9 +184,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -204,9 +205,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("password", "identity.password.invalid")
+                new FieldValidationError("password", IdentityMessages.IDENTITY_PASSWORD_INVALID)
         );
     }
 
@@ -225,10 +226,10 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("password", "identity.password.invalid"),
-                new FieldValidationError("email", "identity.email.invalid")
+                new FieldValidationError("password", IdentityMessages.IDENTITY_PASSWORD_INVALID),
+                new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
 
@@ -247,9 +248,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("password", "identity.password.invalid")
+                new FieldValidationError("password", IdentityMessages.IDENTITY_PASSWORD_INVALID)
         );
     }
 
@@ -268,9 +269,9 @@ public class IdentityServiceCreateTest extends TestBase {
         assertNotNull(exception);
         assertValidationError(
                 exception.getError(),
-                "identity.validation.error",
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("passwordConfirm", "identity.password.confirm.mismatch")
+                new FieldValidationError("passwordConfirm", IdentityMessages.IDENTITY_PASSWORD_CONFIRM_MISMATCH)
         );
     }
 

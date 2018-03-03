@@ -1,5 +1,6 @@
 package hu.springconfig.validator.entity;
 
+import hu.springconfig.config.message.RoleMessages;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ValidationException;
 import hu.springconfig.service.authentication.RoleService;
@@ -8,7 +9,9 @@ import hu.springconfig.validator.ITypeValidator;
 import hu.springconfig.validator.error.FieldValidationError;
 import hu.springconfig.validator.error.TypeValidationError;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class RoleValidator implements ITypeValidator<Role> {
     @Value("${role.name.length.min}")
     private Integer nameMin;
@@ -27,17 +30,17 @@ public class RoleValidator implements ITypeValidator<Role> {
 
     private FieldValidationError validateRole(String role) {
         if (!Util.validateString(role, nameMin, nameMax, nameCharset)) {
-            return new FieldValidationError("role", "role.name.invalid");
+            return new FieldValidationError("role", RoleMessages.ROLE_NAME_INVALID);
         }
         return null;
     }
 
     private FieldValidationError validateId(Integer id) {
         if (id == null) {
-            return new FieldValidationError("id", "role.id.null");
+            return new FieldValidationError("id", RoleMessages.ROLE_ID_NULL);
         }
         if (RoleService.USER_ROLE_ID >= id && id >= RoleService.ADMIN_ROLE_ID) {
-            return new FieldValidationError("id", "role.id.range");
+            return new FieldValidationError("id", RoleMessages.ROLE_ID_RANGE);
         }
         return null;
     }

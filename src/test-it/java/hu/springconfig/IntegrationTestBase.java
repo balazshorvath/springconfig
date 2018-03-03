@@ -97,10 +97,11 @@ public class IntegrationTestBase {
         }
     }
 
-    protected void assertError(ResponseEntity<APIError> error, String message, Class<? extends ResponseException> exception, HttpStatus status) {
+    protected void assertResponseEntity(ResponseEntity<? extends APIError> error, HttpStatus status) {
         assertNotNull(error);
         assertNotNull(error.getBody());
         assertEquals(status, error.getStatusCode());
+        assertEquals((Integer) status.value(), error.getBody().getStatus());
     }
 
     protected void assertAPIError(APIError error, String message, Class<? extends ResponseException> exception, HttpStatus status) {
@@ -110,7 +111,7 @@ public class IntegrationTestBase {
         assertEquals(message, error.getMessage());
     }
 
-    protected void assertValidationError(TypeValidationError error, String errorMessage, Class<?> type, FieldValidationError... fieldErrors) {
+    protected void assertAPIValidationError(TypeValidationError error, String errorMessage, Class<?> type, FieldValidationError... fieldErrors) {
         assertNotNull(error);
         assertEquals(type, error.getType());
         assertEquals(errorMessage, error.getMessage());

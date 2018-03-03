@@ -1,5 +1,6 @@
 package hu.springconfig.validator.request;
 
+import hu.springconfig.config.message.ConditionMessages;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
@@ -26,21 +27,21 @@ public class ConditionValidator implements ITypeValidator<Condition> {
         TypeValidationError typeValidationError = validateCondition(condition);
         if (!Util.notNullAndNotEmpty(condition.getFieldName())) {
             typeValidationError.getErrors().add(
-                    new FieldValidationError("fieldName", "condition.fieldName.null")
+                    new FieldValidationError("fieldName", ConditionMessages.CONDITION_FIELD_NAME_NULL)
             );
         }
         if (condition.getRelationalOperator() == null) {
             typeValidationError.getErrors().add(
-                    new FieldValidationError("relationalOperator", "condition.relationalOperator.null")
+                    new FieldValidationError("relationalOperator", ConditionMessages.CONDITION_RELATIONAL_OPERATOR_NULL)
             );
         }
         if (condition.getValue() == null) {
             typeValidationError.getErrors().add(
-                    new FieldValidationError("value", "condition.value.null")
+                    new FieldValidationError("value", ConditionMessages.CONDITION_VALUE_NULL)
             );
         }
         if (typeValidationError.getErrors().size() > 0) {
-            throw new ValidationException("condition.validation.error", typeValidationError);
+            throw new ValidationException(ConditionMessages.CONDITION_VALIDATION_ERROR, typeValidationError);
         }
     }
 
@@ -48,12 +49,12 @@ public class ConditionValidator implements ITypeValidator<Condition> {
         TypeValidationError typeValidationError = validateCondition(condition);
         if (condition.getLogicalOperator() == null) {
             typeValidationError.getErrors().add(
-                    new FieldValidationError("logicalOperator", "condition.logicalOperator.null")
+                    new FieldValidationError("logicalOperator", ConditionMessages.CONDITION_LOGICAL_OPERATOR_NULL)
             );
         }
         if (!Util.notNullAndNotEmpty(condition.getConditions())) {
             typeValidationError.getErrors().add(
-                    new FieldValidationError("conditions", "condition.conditions.null")
+                    new FieldValidationError("conditions", ConditionMessages.CONDITION_CONDITIONS_NULL)
             );
         }
 
@@ -70,7 +71,7 @@ public class ConditionValidator implements ITypeValidator<Condition> {
         }
 
         if (typeValidationError.getErrors().size() > 0) {
-            throw new ValidationException("condition.validation.error", typeValidationError);
+            throw new ValidationException(ConditionMessages.CONDITION_VALIDATION_ERROR, typeValidationError);
         }
     }
 
@@ -85,7 +86,7 @@ public class ConditionValidator implements ITypeValidator<Condition> {
 
     private FieldValidationError validateOrder(Integer order) {
         if (order == null) {
-            return new FieldValidationError("order", "condition.order.null");
+            return new FieldValidationError("order", ConditionMessages.CONDITION_ORDER_NULL);
         }
         return null;
     }

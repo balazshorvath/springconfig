@@ -1,5 +1,6 @@
 package hu.springconfig.service.authentication;
 
+import hu.springconfig.config.message.RoleMessages;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
@@ -36,7 +37,7 @@ public class RoleService {
     public Role get(Integer roleId) {
         Role role = roleRepository.findOne(roleId);
         if (role == null) {
-            throw new NotFoundException("role.not_found");
+            throw new NotFoundException(RoleMessages.ROLE_NOT_FOUND);
         }
         return role;
     }
@@ -57,7 +58,7 @@ public class RoleService {
     public Role delete(Integer roleId) {
         Role role = get(roleId);
         if (USER_ROLE_ID.equals(roleId) || ADMIN_ROLE_ID.equals(roleId)) {
-            throw new ForbiddenException("role.static_delete");
+            throw new ForbiddenException(RoleMessages.ROLE_STATIC_DELETE);
         }
         roleRepository.delete(roleId);
         return role;
@@ -69,14 +70,14 @@ public class RoleService {
         role.setVersion(version);
         if (newId != null) {
             if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {
-                throw new ForbiddenException("role.id.static");
+                throw new ForbiddenException(RoleMessages.ROLE_ID_STATIC);
             }
             role = delete(id);
             role.setId(newId);
         }
         if (Util.notNullAndNotEmpty(roleName)) {
             if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {
-                throw new ForbiddenException("role.role_name.static");
+                throw new ForbiddenException(RoleMessages.ROLE_ROLE_NAME_STATIC);
             }
             role.setRole(roleName);
         }

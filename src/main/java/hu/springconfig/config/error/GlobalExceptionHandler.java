@@ -1,7 +1,9 @@
 package hu.springconfig.config.error;
 
+import hu.springconfig.config.message.HttpMessages;
 import hu.springconfig.config.message.MessageProvider;
 import hu.springconfig.exception.*;
+import hu.springconfig.validator.error.TypeValidationError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -54,7 +56,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         } else {
             error.setOriginalException(exception.getClass());
         }
-        error.setMessage(messageProvider.getMessage("forbidden.message"));
+        error.setMessage(messageProvider.getMessage(HttpMessages.HTTP_FORBIDDEN_MESSAGE));
 
         logger.error("AccessDeniedException handled: " + error, exception);
         return handleExceptionInternal(exception, error, headers, HttpStatus.FORBIDDEN, request);
@@ -64,44 +66,50 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleUnexpectedException(Exception exception, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         APIError error = new APIError(new InternalErrorException(exception.getMessage(), exception));
-        error.setMessage(messageProvider.getMessage("http.internal.error"));
+        error.setMessage(messageProvider.getMessage(HttpMessages.HTTP_INTERNAL_ERROR));
         return handleExceptionInternal(exception, error, headers, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
-    // TODO extract more information!
     @ExceptionHandler(value = DataIntegrityViolationException.class)
-    public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException exception, WebRequest request) {
+    public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException exception,
+                                                                        WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
-        APIError error = new APIError(new ValidationException(exception.getMessage(), exception));
-        error.setMessage(messageProvider.getMessage("http.conflict.error"));
+        APIValidationError error = new APIValidationError(new ValidationException(exception.getMessage(), exception));
+        error.setMessage(messageProvider.getMessage(HttpMessages.HTTP_CONFLICT_ERROR));
+        error.setError(new TypeValidationError());
         return handleExceptionInternal(exception, error, headers, HttpStatus.CONFLICT, request);
     }
 
 
     @ExceptionHandler(value = PropertyReferenceException.class)
-    public ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException exception, WebRequest request) {
+    public ResponseEntity<Object> handlePropertyReferenceException(PropertyReferenceException exception, WebRequest
+            request) {
         HttpHeaders headers = new HttpHeaders();
-        return handleBadRequests(exception, headers, request, "specifications.property.not_found");
+        return handleBadRequests(exception, headers, request, HttpMessages.SPECIFICATIONS_PROPERTY_NOT_FOUND);
     }
 
     @ExceptionHandler(value = IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgumentException(PropertyReferenceException exception, WebRequest request) {
+    public ResponseEntity<Object> handleIllegalArgumentException(PropertyReferenceException exception, WebRequest
+            request) {
         HttpHeaders headers = new HttpHeaders();
         return handleBadRequests(exception, headers, request);
     }
 
     @Override
-    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception, HttpHeaders headers, HttpStatus status, WebRequest request) {
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception,
+                                                                  HttpHeaders headers, HttpStatus status, WebRequest
+                                                                          request) {
         return handleBadRequests(exception, headers, request);
     }
 
-    private ResponseEntity<Object> handleBadRequests(Exception exception, HttpHeaders headers, WebRequest request, String message) {
+    private ResponseEntity<Object> handleBadRequests(Exception exception, HttpHeaders headers, WebRequest request,
+                                                     String message) {
         APIError error = new APIError(new BadRequestException(exception.getMessage(), exception));
         error.setMessage(messageProvider.getMessage(message));
         return handleExceptionInternal(exception, error, headers, HttpStatus.BAD_REQUEST, request);
     }
 
     private ResponseEntity<Object> handleBadRequests(Exception exception, HttpHeaders headers, WebRequest request) {
-        return handleBadRequests(exception, headers, request, "http.bad.request");
+        return handleBadRequests(exception, headers, request, HttpMessages.HTTP_BAD_REQUEST);
     }
 }
