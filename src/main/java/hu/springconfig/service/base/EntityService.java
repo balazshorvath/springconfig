@@ -1,6 +1,5 @@
 package hu.springconfig.service.base;
 
-import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.exception.ValidationException;
 import hu.springconfig.validator.ITypeValidator;
@@ -39,7 +38,7 @@ public abstract class EntityService<T, ID extends Serializable> extends LoggingC
             throw new ValidationException(
                     message,
                     new TypeValidationError(
-                            Identity.class,
+                            entity.getClass(),
                             message,
                             Collections.singletonList(error)
                     )

@@ -13,4 +13,7 @@ public class IdentityMessages {
     public static final String IDENTITY_USERNAME_INVALID = "identity.username.invalid";
     public static final String IDENTITY_EMAIL_INVALID = "identity.email.invalid";
     public static final String IDENTITY_VALIDATION_ERROR = "identity.validation.error";
+    /* Constraint */
+    public static final String IDENTITY_USERNAME_UNIQUE_VIOLATION = "identity.username_unique.violation";
+
 }

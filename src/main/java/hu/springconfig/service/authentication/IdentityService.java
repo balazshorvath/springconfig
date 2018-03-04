@@ -74,10 +74,9 @@ public class IdentityService extends EntityService<Identity, Long> {
 
     public Identity changePassword(Identity current, String oldPassword, String newPassword, String newConfirm) {
         checkPassword(current, oldPassword);
-        validator.validateWithPasswords(current, newPassword, newConfirm);
         current.setPassword(encoder.encode(newPassword));
         current.setTokenExpiration(System.currentTimeMillis());
-        return identityRepository.save(current);
+        return saveWithPasswords(current, newPassword, newConfirm);
     }
 
     public Identity changeEmailSelf(Identity current, String password, String newEmail) {
@@ -127,8 +126,7 @@ public class IdentityService extends EntityService<Identity, Long> {
         identity.setRoles(Collections.singleton(roleService.get(RoleService.USER_ROLE_ID)));
         identity.setPassword(encoder.encode(password));
 
-        validator.validateWithPasswords(identity, password, passwordConfirm);
-        return identityRepository.save(identity);
+        return saveWithPasswords(identity, password, passwordConfirm);
     }
 
     public void delete(Identity current, Long id) {
@@ -158,6 +156,11 @@ public class IdentityService extends EntityService<Identity, Long> {
                 SpecificationsUtils.withQuery(condition),
                 pageable
         );
+    }
+
+    private Identity saveWithPasswords(Identity identity, String password, String passwordConfirm) {
+        validator.validateWithPasswords(identity, password, passwordConfirm);
+        return super.save(identity);
     }
 
     @Override

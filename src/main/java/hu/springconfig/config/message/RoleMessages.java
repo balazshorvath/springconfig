@@ -11,4 +11,5 @@ public class RoleMessages {
     public static final String ROLE_NAME_INVALID = "role.name.invalid";
     public static final String ROLE_ID_NULL = "role.id.null";
     public static final String ROLE_ID_RANGE = "role.id.range";
+    public static final String ROLE_VALIDATION_ERROR = "role.validation.error";
 }

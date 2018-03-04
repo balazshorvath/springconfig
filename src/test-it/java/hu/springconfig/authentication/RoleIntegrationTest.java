@@ -74,16 +74,16 @@ public class RoleIntegrationTest extends IntegrationTestBase {
                 create,
                 APIValidationError.class
         );
-        assertResponseEntity(error, HttpStatus.BAD_REQUEST);
+        assertResponseEntity(validationError, HttpStatus.CONFLICT);
         assertAPIError(
                 validationError.getBody(),
-                "role.validation.error",
+                RoleMessages.ROLE_VALIDATION_ERROR,
                 ValidationException.class,
                 HttpStatus.CONFLICT
         );
         assertAPIValidationError(
                 validationError.getBody().getError(),
-                "role.validation.error",
+                RoleMessages.ROLE_VALIDATION_ERROR,
                 Role.class,
                 new FieldValidationError("id", RoleMessages.ROLE_ID_NULL),
                 new FieldValidationError("role", RoleMessages.ROLE_NAME_INVALID)
@@ -93,18 +93,17 @@ public class RoleIntegrationTest extends IntegrationTestBase {
         create.setId(1);
         create.setRole("");
         validationError = restTemplate.postForEntity("/role", create, APIValidationError.class);
-        assertResponseEntity(error, HttpStatus.BAD_REQUEST);
+        assertResponseEntity(validationError, HttpStatus.CONFLICT);
         assertAPIError(
                 validationError.getBody(),
-                "role.validation.error",
+                RoleMessages.ROLE_VALIDATION_ERROR,
                 ValidationException.class,
                 HttpStatus.CONFLICT
         );
         assertAPIValidationError(
                 validationError.getBody().getError(),
-                "role.validation.error",
+                RoleMessages.ROLE_VALIDATION_ERROR,
                 Role.class,
-                new FieldValidationError("id", RoleMessages.ROLE_ID_RANGE),
                 new FieldValidationError("role", RoleMessages.ROLE_NAME_INVALID)
         );
         // Success

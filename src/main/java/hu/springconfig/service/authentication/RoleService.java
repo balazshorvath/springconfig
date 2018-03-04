@@ -6,13 +6,13 @@ import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
 import hu.springconfig.exception.ForbiddenException;
-import hu.springconfig.exception.NotFoundException;
+import hu.springconfig.service.base.EntityService;
 import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
-import hu.springconfig.validator.entity.RoleValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -20,26 +20,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class RoleService {
+public class RoleService extends EntityService<Role, Integer> {
     public static final Integer USER_ROLE_ID = 1;
     public static final Integer ADMIN_ROLE_ID = 1000;
 
     @Autowired
     private IRoleRepository roleRepository;
-    @Autowired
-    private RoleValidator validator;
 
 
     public Set<Role> getRoles(Set<Integer> roleIds) {
         return roleIds.stream().map(this::get).collect(Collectors.toSet());
-    }
-
-    public Role get(Integer roleId) {
-        Role role = roleRepository.findOne(roleId);
-        if (role == null) {
-            throw new NotFoundException(RoleMessages.ROLE_NOT_FOUND);
-        }
-        return role;
     }
 
     public Role create(Integer id, String roleName, Set<Privilege> privileges) {
@@ -48,11 +38,6 @@ public class RoleService {
         role.setRole(roleName);
         role.setPrivileges(privileges);
         return save(role);
-    }
-
-    private Role save(Role role) {
-        validator.validate(role);
-        return roleRepository.save(role);
     }
 
     public Role delete(Integer roleId) {
@@ -89,5 +74,15 @@ public class RoleService {
 
     public Page<Role> list(Condition condition, Pageable pageable) {
         return roleRepository.findAll(SpecificationsUtils.withQuery(condition), pageable);
+    }
+
+    @Override
+    protected CrudRepository<Role, Integer> getRepository() {
+        return roleRepository;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return RoleMessages.ENTITY_NAME;
     }
 }

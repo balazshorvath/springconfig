@@ -39,15 +39,19 @@ public class RoleValidator implements ITypeValidator<Role> {
         if (id == null) {
             return new FieldValidationError("id", RoleMessages.ROLE_ID_NULL);
         }
-        if (RoleService.USER_ROLE_ID >= id && id >= RoleService.ADMIN_ROLE_ID) {
+        if (RoleService.USER_ROLE_ID < id && id > RoleService.ADMIN_ROLE_ID) {
             return new FieldValidationError("id", RoleMessages.ROLE_ID_RANGE);
         }
         return null;
     }
 
-
     @Override
     public Class<Role> getType() {
         return Role.class;
+    }
+
+    @Override
+    public String getValidationErrorMessage() {
+        return RoleMessages.ROLE_VALIDATION_ERROR;
     }
 }

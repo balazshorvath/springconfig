@@ -355,8 +355,9 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         assertResponseEntity(validationError, HttpStatus.CONFLICT);
         assertAPIValidationError(
                 validationError.getBody().getError(),
-                HttpMessages.HTTP_CONFLICT_ERROR,
-                Identity.class
+                IdentityMessages.IDENTITY_VALIDATION_ERROR,
+                Identity.class,
+                new FieldValidationError("username_unique", IdentityMessages.IDENTITY_USERNAME_UNIQUE_VIOLATION)
         );
         IdentityDTO identityToken = authenticateAndValidate(roles, username, email, credentials);
 

@@ -14,14 +14,19 @@ public interface ITypeValidator<T> {
 
     Class<T> getType();
 
+    String getValidationErrorMessage();
+
     default TypeValidationError createTypeValidationError() {
-        Class<T> type = getType();
-        return new TypeValidationError(type, type.getSimpleName().toLowerCase() + ".validation.error", new ArrayList<>());
+        return new TypeValidationError(
+                getType(),
+                getValidationErrorMessage(),
+                new ArrayList<>()
+        );
     }
 
     default void checkResult(TypeValidationError error) throws ValidationException {
         if (error.getErrors().size() > 0) {
-            throw new ValidationException(getType().getSimpleName().toLowerCase() + ".validation.error", error);
+            throw new ValidationException(getValidationErrorMessage(), error);
         }
     }
 }

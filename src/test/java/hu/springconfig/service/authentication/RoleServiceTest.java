@@ -57,12 +57,13 @@ public class RoleServiceTest {
     @Test
     public void testCreate() {
         Set<Privilege> privileges = new HashSet<>();
+        final String newRole = "NewRole";
         privileges.add(new Privilege(Privilege.Privileges.IDENTITY_GET));
         privileges.add(new Privilege(Privilege.Privileges.IDENTITY_DENY));
         privileges.add(new Privilege(Privilege.Privileges.IDENTITY_GRANT));
-        Role role = underTest.create(10, "New Role", privileges);
+        Role role = underTest.create(10, newRole, privileges);
 
-        assertRole(role, 10, "New Role", privileges);
+        assertRole(role, 10, newRole, privileges);
     }
 
     @Test

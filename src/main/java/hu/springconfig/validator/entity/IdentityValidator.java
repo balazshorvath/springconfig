@@ -38,18 +38,10 @@ public class IdentityValidator implements ITypeValidator<Identity> {
 
     @Override
     public void validate(Identity entity) throws ValidationException {
-        TypeValidationError typeValidationError = createTypeValidationError();
-        FieldValidationError error = validateEmail(entity.getEmail());
-        if (error != null) {
-            typeValidationError.getErrors().add(error);
-        }
-        error = validateUsername(entity.getUsername());
-        if (error != null) {
-            typeValidationError.getErrors().add(error);
-        }
-        if (typeValidationError.getErrors().size() > 0) {
-            throw new ValidationException(IdentityMessages.IDENTITY_VALIDATION_ERROR, typeValidationError);
-        }
+        TypeValidationError error = createTypeValidationError();
+        error.addErrorIfNotNull(validateEmail(entity.getEmail()));
+        error.addErrorIfNotNull(validateUsername(entity.getUsername()));
+        checkResult(error);
     }
 
     public void validateWithPasswords(Identity entity, String password, String passwordConfirm) throws
@@ -88,5 +80,10 @@ public class IdentityValidator implements ITypeValidator<Identity> {
     @Override
     public Class<Identity> getType() {
         return Identity.class;
+    }
+
+    @Override
+    public String getValidationErrorMessage() {
+        return IdentityMessages.IDENTITY_VALIDATION_ERROR;
     }
 }

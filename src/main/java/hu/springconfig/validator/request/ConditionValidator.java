@@ -95,4 +95,9 @@ public class ConditionValidator implements ITypeValidator<Condition> {
     public Class<Condition> getType() {
         return Condition.class;
     }
+
+    @Override
+    public String getValidationErrorMessage() {
+        return ConditionMessages.CONDITION_VALIDATION_ERROR;
+    }
 }
