@@ -8,7 +8,6 @@ import hu.springconfig.data.repository.account.IAccountRepository;
 import hu.springconfig.data.repository.account.IInviteRepository;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
-import hu.springconfig.data.repository.meal.IMealRepository;
 import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.validator.error.FieldValidationError;
 import hu.springconfig.validator.error.TypeValidationError;
@@ -26,8 +25,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 public class TestBase {
-    @MockBean
-    protected IMealRepository mealRepository;
     @MockBean
     protected IIdentityRepository identityRepository;
     @MockBean

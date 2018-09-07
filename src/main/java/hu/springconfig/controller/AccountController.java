@@ -18,7 +18,6 @@ import hu.springconfig.service.account.AccountService;
 import hu.springconfig.service.account.InviteService;
 import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.mail.MailingService;
-import hu.springconfig.service.meal.MealService;
 import hu.springconfig.util.Util;
 import hu.springconfig.validator.request.ConditionValidator;
 import org.modelmapper.ModelMapper;
@@ -41,8 +40,6 @@ public class AccountController {
     private AccountService accountService;
     @Autowired
     private IdentityService identityService;
-    @Autowired
-    private MealService mealService;
     @Autowired
     private MailingService mailingService;
     private ModelMapper modelMapper;
@@ -126,7 +123,6 @@ public class AccountController {
     @DeleteMapping("/account/{id}")
     public OKResponse delete(@PathVariable Long id, Authentication authentication) {
         Account account = accountService.get(id);
-        mealService.deleteForAccount(account);
         accountService.delete(id);
         identityService.delete((Identity) authentication.getPrincipal(), id);
         return new OKResponse();

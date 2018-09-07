@@ -8,7 +8,6 @@ import hu.springconfig.data.repository.account.IAccountRepository;
 import hu.springconfig.data.repository.account.IInviteRepository;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
-import hu.springconfig.data.repository.meal.IMealRepository;
 import hu.springconfig.exception.ForbiddenException;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +30,6 @@ import static org.mockito.Mockito.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class RoleServiceTest {
-    @MockBean
-    private IMealRepository mealRepository;
     @MockBean
     private IIdentityRepository identityRepository;
     @MockBean

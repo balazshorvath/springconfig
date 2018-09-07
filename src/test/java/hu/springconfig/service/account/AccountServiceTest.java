@@ -1,6 +1,7 @@
 package hu.springconfig.service.account;
 
 import hu.springconfig.Application;
+import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.config.message.entity.AccountMessages;
 import hu.springconfig.data.entity.Account;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
@@ -19,11 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = {Application.class}
-)
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class AccountServiceTest extends TestBase {
     @Autowired
     private AccountService underTest;

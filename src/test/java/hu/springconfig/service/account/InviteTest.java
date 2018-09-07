@@ -1,6 +1,7 @@
 package hu.springconfig.service.account;
 
 import hu.springconfig.Application;
+import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
 import hu.springconfig.config.message.entity.InviteMessages;
 import hu.springconfig.data.entity.Invite;
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.*;
@@ -20,11 +22,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = {Application.class}
-)
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class InviteTest extends TestBase {
     @Autowired
     private InviteService underTest;
