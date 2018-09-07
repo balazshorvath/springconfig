@@ -30,7 +30,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     private ObjectMapper objectMapper;
     private JWTTokenParser tokenParser;
 
-    public JWTAuthorizationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser, ObjectMapper objectMapper) {
+    public JWTAuthorizationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser,
+            ObjectMapper objectMapper) {
         super(authenticationManager);
         this.tokenParser = tokenParser;
         this.objectMapper = objectMapper;
@@ -38,14 +39,19 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         try {
-            if(!JWTAuthenticationFilter.LOGIN_REQUEST.matches(request)){
+            if (!JWTAuthenticationFilter.LOGIN_REQUEST.matches(request)) {
                 Identity identity = tokenParser.parseToken(request);
 
                 log.debug("Token parsed: {}", identity);
                 if (identity != null) {
-                    Authentication authentication = new JWTAuthenticationToken(identity, null, identity.getAuthorities());
+                    Authentication authentication = new JWTAuthenticationToken(
+                            identity,
+                            null,
+                            identity.getAuthorities()
+                    );
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
@@ -56,7 +62,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
             response.getOutputStream().println(objectMapper.writeValueAsString(error));
             response.setStatus(e.getStatus().value());
             log.error("Received an invalid token, that generated an error: {} on request {}, method {}",
-                    error, request.getRequestURI(), request.getMethod());
+                      error, request.getRequestURI(), request.getMethod()
+            );
         }
     }
 }

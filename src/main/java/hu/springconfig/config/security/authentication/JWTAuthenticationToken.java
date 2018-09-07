@@ -15,7 +15,8 @@ public class JWTAuthenticationToken extends AbstractAuthenticationToken {
     private Identity principal;
     private Credentials credentials;
 
-    public JWTAuthenticationToken(Identity principal, Credentials credentials, Collection<? extends GrantedAuthority> authorities) {
+    public JWTAuthenticationToken(Identity principal, Credentials credentials,
+            Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.principal = principal;
         this.credentials = credentials;

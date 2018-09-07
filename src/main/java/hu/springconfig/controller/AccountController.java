@@ -105,7 +105,7 @@ public class AccountController {
     @PreAuthorize("hasAuthority('IDENTITY_UPDATE') || @identityAuthorization.isSelf(authentication, #identityId)")
     @PostMapping("/account/register/{identityId}")
     public OKResponse register(@PathVariable Long identityId, @RequestBody AccountCreate accountCreate,
-                               Authentication authentication) {
+            Authentication authentication) {
         Identity identity = identityService.get(identityId);
         if (identity.getAccount() != null) {
             throw new ForbiddenException(AccountMessages.ACCOUNT_REGISTRATION_ALREADY_EXISTS);

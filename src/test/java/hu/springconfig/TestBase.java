@@ -87,7 +87,7 @@ public class TestBase {
     }
 
     protected void assertIdentity(Identity identity, Long id, String email, String password,
-                                  Set<Role> roles) {
+            Set<Role> roles) {
         assertEquals(id, identity.getId());
         assertEquals(email, identity.getEmail());
         assertEquals(roles, identity.getRoles());
@@ -95,7 +95,7 @@ public class TestBase {
     }
 
     public void assertValidationError(TypeValidationError error, String errorMessage, Class<?> type,
-                                      FieldValidationError... fieldErrors) {
+            FieldValidationError... fieldErrors) {
         assertNotNull(error);
         assertEquals(type, error.getType());
         assertEquals(errorMessage, error.getMessage());

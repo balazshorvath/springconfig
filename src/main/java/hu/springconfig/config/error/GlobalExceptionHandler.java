@@ -72,7 +72,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException exception,
-                                                                        WebRequest request) {
+            WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         APIValidationError error = new APIValidationError(new ValidationException(exception.getMessage(), exception));
         error.setMessage(messageProvider.getMessage(HttpMessages.HTTP_CONFLICT_ERROR));
@@ -97,13 +97,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException exception,
-                                                                  HttpHeaders headers, HttpStatus status, WebRequest
-                                                                          request) {
+            HttpHeaders headers, HttpStatus status, WebRequest
+            request) {
         return handleBadRequests(exception, headers, request);
     }
 
     private ResponseEntity<Object> handleBadRequests(Exception exception, HttpHeaders headers, WebRequest request,
-                                                     String message) {
+            String message) {
         APIError error = new APIError(new BadRequestException(exception.getMessage(), exception));
         error.setMessage(messageProvider.getMessage(message));
         return handleExceptionInternal(exception, error, headers, HttpStatus.BAD_REQUEST, request);

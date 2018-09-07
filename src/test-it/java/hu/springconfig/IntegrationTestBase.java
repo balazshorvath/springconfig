@@ -13,7 +13,6 @@ import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.data.repository.account.IAccountRepository;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
-import hu.springconfig.data.repository.meal.IMealRepository;
 import hu.springconfig.exception.ResponseException;
 import hu.springconfig.validator.error.FieldValidationError;
 import hu.springconfig.validator.error.TypeValidationError;
@@ -47,8 +46,6 @@ public class IntegrationTestBase {
     @Autowired
     protected IIdentityRepository identityRepository;
     @Autowired
-    private IMealRepository mealRepository;
-    @Autowired
     protected IAccountRepository accountRepository;
 
     @Before
@@ -57,7 +54,6 @@ public class IntegrationTestBase {
         factory.setOutputStreaming(false);
         restTemplate.getRestTemplate().setRequestFactory(factory);
         unsetRestTemplateToken();
-        mealRepository.deleteAll();
         accountRepository.deleteAll();
         identityRepository.deleteAll();
     }
@@ -129,7 +125,7 @@ public class IntegrationTestBase {
     }
 
     protected void assertAccount(AccountDTO accountDTO, Long id, String email, Set<Integer> roles,
-                                 String firstName, String lastName, Long dailyCalorieGoal) {
+            String firstName, String lastName, Long dailyCalorieGoal) {
         assertNotNull(accountDTO);
         assertIdentity(accountDTO.getIdentity(), id, email, roles);
         assertEquals(firstName, accountDTO.getFirstName());
@@ -145,7 +141,7 @@ public class IntegrationTestBase {
     }
 
     protected void assertAPIError(APIError error, String message, Class<? extends ResponseException> exception,
-                                  HttpStatus status) {
+            HttpStatus status) {
         assertNotNull(error);
         assertEquals((Integer) status.value(), error.getStatus());
         assertEquals(exception, error.getException());
@@ -153,7 +149,7 @@ public class IntegrationTestBase {
     }
 
     protected void assertAPIValidationError(TypeValidationError error, String errorMessage, Class<?> type,
-                                            FieldValidationError... fieldErrors) {
+            FieldValidationError... fieldErrors) {
         assertNotNull(error);
         assertEquals(type, error.getType());
         assertEquals(errorMessage, error.getMessage());
@@ -212,7 +208,6 @@ public class IntegrationTestBase {
     }
 
     public void cleanup() {
-        mealRepository.deleteAll();
         accountRepository.deleteAll();
         identityRepository.deleteAll();
     }

@@ -36,7 +36,7 @@ public class AccountService extends EntityService<Account, Long> {
     }
 
     public Account update(Long id, String firstName, String lastName, Long dailyCalorieGoal, long version,
-                          Identity current) {
+            Identity current) {
         Account account = get(id);
         if (account.getIdentity().isSuperiorTo(current)) {
             throw new ForbiddenException(IDENTITY_LOW_RANK);

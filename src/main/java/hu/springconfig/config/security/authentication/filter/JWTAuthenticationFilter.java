@@ -42,7 +42,7 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
     private MessageProvider messageProvider;
 
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTTokenParser tokenParser,
-                                   ObjectMapper objectMapper, MessageProvider messageProvider) {
+            ObjectMapper objectMapper, MessageProvider messageProvider) {
         super(LOGIN_REQUEST);
         this.messageProvider = messageProvider;
         setAuthenticationManager(authenticationManager);
@@ -75,7 +75,7 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                              AuthenticationException failed) throws IOException, ServletException {
+            AuthenticationException failed) throws IOException, ServletException {
         APIError error;
         if (failed instanceof AuthenticationBadRequestException) {
             BadRequestException exception = new BadRequestException(failed);
