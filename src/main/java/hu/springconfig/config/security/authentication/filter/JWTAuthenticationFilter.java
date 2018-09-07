@@ -2,14 +2,16 @@ package hu.springconfig.config.security.authentication.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.springconfig.config.error.APIError;
-import hu.springconfig.config.message.HttpMessages;
 import hu.springconfig.config.message.MessageProvider;
+import hu.springconfig.config.message.application.HttpMessages;
 import hu.springconfig.config.security.authentication.JWTAuthenticationToken;
 import hu.springconfig.config.security.authentication.JWTTokenParser;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.entity.authentication.Identity;
+import hu.springconfig.exception.AccountLockedException;
 import hu.springconfig.exception.AuthenticationFailedException;
 import hu.springconfig.exception.BadRequestException;
+import hu.springconfig.exception.authentication.AuthenticationAccountLockedException;
 import hu.springconfig.exception.authentication.AuthenticationBadRequestException;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -79,6 +81,10 @@ public class JWTAuthenticationFilter extends AbstractAuthenticationProcessingFil
             BadRequestException exception = new BadRequestException(failed);
             error = new APIError(exception);
             response.setStatus(((AuthenticationBadRequestException) failed).getStatus().value());
+        } else if (failed instanceof AuthenticationAccountLockedException) {
+            AccountLockedException exception = new AccountLockedException(failed);
+            error = new APIError(exception);
+            response.setStatus(((AuthenticationAccountLockedException) failed).getStatus().value());
         } else {
             AuthenticationFailedException exception = new AuthenticationFailedException(failed.getMessage(), failed);
             error = new APIError(exception);

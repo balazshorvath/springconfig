@@ -2,7 +2,7 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
-import hu.springconfig.config.message.IdentityMessages;
+import hu.springconfig.config.message.entity.IdentityMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
@@ -37,8 +37,8 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Override
     public void setup() {
         super.setup();
-        user = createIdentity(20L, "user", "user@email", "password", userRole);
-        admin = createIdentity(21L, "admin", "admin@email", "password", userRole, adminRole);
+        user = createIdentity(20L, "user@email", "password", userRole);
+        admin = createIdentity(21L, "admin@email", "password", userRole, adminRole);
         mockIdentityDatabase(user, admin);
 
         when(identityRepository.save(any(Identity.class))).thenAnswer(invocation -> new Identity(invocation.getArgument(
@@ -78,7 +78,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testResetPassword() {
         String oldPassword = user.getPassword();
-        Identity updated = underTest.resetPassword(user.getEmail(), user.getUsername());
+        Identity updated = underTest.resetPassword(user.getEmail());
         assertNotNull(updated.getTokenExpiration());
         assertNotEquals(oldPassword, updated.getPassword());
         verify(mailingService, times(1)).sendPasswordReset(eq(updated.getEmail()), anyString());
@@ -87,7 +87,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     @Test
     public void testChangePassword() {
         Identity updated = underTest.changePassword(user, "password", "newpassword", "newpassword");
-        assertIdentity(updated, 20L, "user", "user@email", "newpassword", Collections.singleton(userRole));
+        assertIdentity(updated, 20L, "user@email", "newpassword", Collections.singleton(userRole));
     }
 
     @Test
@@ -136,45 +136,45 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         assertEquals(IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, exception.getMessage());
     }
 
-    @Test
-    public void testChangeUsernameSelf() {
-        Identity updated = underTest.changeUsernameSelf(user, "password", "username");
-        assertIdentity(updated, 20L, "username", "user@email", "password", Collections.singleton(userRole));
-    }
+//    @Test
+//    public void testChangeUsernameSelf() {
+//        Identity updated = underTest.changeUsernameSelf(user, "password", "username");
+//        assertIdentity(updated, 20L, "user@email", "password", Collections.singleton(userRole));
+//    }
 
-    @Test
-    public void testChangeUsernameSelfInvalid() {
-        ValidationException exception = null;
-        try {
-            underTest.changeUsernameSelf(user, "password", "use+rname");
-        } catch (ValidationException e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertValidationError(
-                exception.getError(),
-                IdentityMessages.IDENTITY_VALIDATION_ERROR,
-                Identity.class,
-                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
-        );
-    }
+//    @Test
+//    public void testChangeUsernameSelfInvalid() {
+//        ValidationException exception = null;
+//        try {
+//            underTest.changeUsernameSelf(user, "password", "use+rname");
+//        } catch (ValidationException e) {
+//            exception = e;
+//        }
+//        assertNotNull(exception);
+//        assertValidationError(
+//                exception.getError(),
+//                IdentityMessages.IDENTITY_VALIDATION_ERROR,
+//                Identity.class,
+//                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID)
+//        );
+//    }
 
-    @Test
-    public void testChangeUsernameSelfForbidden() {
-        ForbiddenException exception = null;
-        try {
-            underTest.changeUsernameSelf(user, "password1", "username");
-        } catch (ForbiddenException e) {
-            exception = e;
-        }
-        assertNotNull(exception);
-        assertEquals(IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, exception.getMessage());
-    }
+//    @Test
+//    public void testChangeUsernameSelfForbidden() {
+//        ForbiddenException exception = null;
+//        try {
+//            underTest.changeUsernameSelf(user, "password1", "username");
+//        } catch (ForbiddenException e) {
+//            exception = e;
+//        }
+//        assertNotNull(exception);
+//        assertEquals(IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, exception.getMessage());
+//    }
 
     @Test
     public void testChangeEmailSelf() {
         Identity updated = underTest.changeEmailSelf(user, "password", "username@email");
-        assertIdentity(updated, 20L, "user", "username@email", "password", Collections.singleton(userRole));
+        assertIdentity(updated, 20L, "username@email", "password", Collections.singleton(userRole));
     }
 
     @Test
@@ -211,20 +211,19 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
         Identity updated = underTest.updateIdentity(
                 admin,
                 user.getId(),
-                "somethingelse",
                 user.getEmail(),
                 user.getVersion()
         );
-        assertIdentity(updated, 20L, "somethingelse", user.getEmail(), "password", user.getRoles());
-        updated = underTest.updateIdentity(admin, user.getId(), "somethingelse1", "newmail@mail", user.getVersion());
-        assertIdentity(updated, user.getId(), "somethingelse1", "newmail@mail", "password", user.getRoles());
+        assertIdentity(updated, 20L, user.getEmail(), "password", user.getRoles());
+        updated = underTest.updateIdentity(admin, user.getId(), "newmail@mail", user.getVersion());
+        assertIdentity(updated, user.getId(), "newmail@mail", "password", user.getRoles());
     }
 
     @Test
     public void testUpdateLowRank() {
         ForbiddenException exception = null;
         try {
-            underTest.updateIdentity(user, admin.getId(), "somethingelse", "", user.getVersion());
+            underTest.updateIdentity(user, admin.getId(), "", user.getVersion());
         } catch (ForbiddenException e) {
             exception = e;
         }
@@ -236,7 +235,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     public void testUpdateInvalidUsernameAndEmail() {
         ValidationException exception = null;
         try {
-            underTest.updateIdentity(admin, user.getId(), "qwe", "", user.getVersion());
+            underTest.updateIdentity(admin, user.getId(), "", user.getVersion());
         } catch (ValidationException e) {
             exception = e;
         }
@@ -245,7 +244,6 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
                 exception.getError(),
                 IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID),
                 new FieldValidationError("email", IdentityMessages.IDENTITY_EMAIL_INVALID)
         );
     }
@@ -254,7 +252,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     public void testUpdateInvalidEmail() {
         ValidationException exception = null;
         try {
-            underTest.updateIdentity(admin, user.getId(), user.getUsername(), "asd", user.getVersion());
+            underTest.updateIdentity(admin, user.getId(), "asd", user.getVersion());
         } catch (ValidationException e) {
             exception = e;
         }
@@ -271,7 +269,7 @@ public class IdentityServiceUpdateDeleteTest extends TestBase {
     public void testUpdateEntityDoesNotExist() {
         NotFoundException exception = null;
         try {
-            underTest.updateIdentity(user, 10L, "somethingelse", "", user.getVersion());
+            underTest.updateIdentity(user, 10L, "", user.getVersion());
         } catch (NotFoundException e) {
             exception = e;
         }

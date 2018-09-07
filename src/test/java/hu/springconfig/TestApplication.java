@@ -9,12 +9,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.RestTemplate;
 
 import static org.mockito.Mockito.mock;
 
 @Configuration
 @ConfigurationProperties
-@ComponentScan({"hu.springconfig.service.authentication", "hu.springconfig.data", "hu.springconfig.validator", "hu.springconfig.config.message"})
+@ComponentScan({"hu.springconfig.service", "hu.springconfig.data", "hu.springconfig.validator", "hu.springconfig.config.message"})
 public class TestApplication {
 
     @Bean
@@ -35,5 +36,10 @@ public class TestApplication {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return mock(RestTemplate.class);
     }
 }

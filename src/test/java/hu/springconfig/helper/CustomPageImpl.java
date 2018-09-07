@@ -3,6 +3,7 @@ package hu.springconfig.helper;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString
 public class CustomPageImpl<T> extends PageImpl<T> {
 
     private static final long serialVersionUID = 1L;
@@ -32,7 +34,9 @@ public class CustomPageImpl<T> extends PageImpl<T> {
     }
 
     public Page<T> pageImpl() {
-        return new PageImpl<>(getContent(), new PageRequest(getNumber(),
-                getSize()), getTotalElements());
+        return new PageImpl<>(getContent(), new PageRequest(
+                getNumber(),
+                getSize()
+        ), getTotalElements());
     }
 }

@@ -1,21 +1,16 @@
 package hu.springconfig.service.authentication;
 
-import hu.springconfig.config.message.RoleMessages;
+import hu.springconfig.config.message.entity.RoleMessages;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
-import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.service.base.EntityService;
-import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,7 +35,7 @@ public class RoleService extends EntityService<Role, Integer> {
         return save(role);
     }
 
-    public Role delete(Integer roleId) {
+    public Role deleteRole(Integer roleId) {
         Role role = get(roleId);
         if (USER_ROLE_ID.equals(roleId) || ADMIN_ROLE_ID.equals(roleId)) {
             throw new ForbiddenException(RoleMessages.ROLE_STATIC_DELETE);
@@ -49,31 +44,27 @@ public class RoleService extends EntityService<Role, Integer> {
         return role;
     }
 
-    @Transactional
     public Role update(Integer id, Integer newId, String roleName, Set<Privilege> privileges, long version) {
         Role role = get(id);
-        role.setVersion(version);
-        if (newId != null) {
+        if (newId != null && !id.equals(newId)) {
             if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {
                 throw new ForbiddenException(RoleMessages.ROLE_ID_STATIC);
             }
-            role = delete(id);
+            deleteRole(id);
+            role = new Role(role);
             role.setId(newId);
+            role.setVersion(0);
+        } else {
+            role.setVersion(version);
         }
-        if (Util.notNullAndNotEmpty(roleName)) {
+        if (Util.notNullAndNotEmpty(roleName) && !role.getRole().equals(roleName)) {
             if (USER_ROLE_ID.equals(id) || ADMIN_ROLE_ID.equals(id)) {
                 throw new ForbiddenException(RoleMessages.ROLE_ROLE_NAME_STATIC);
             }
             role.setRole(roleName);
         }
-        if (Util.notNullAndNotEmpty(privileges)) {
-            role.setPrivileges(privileges);
-        }
+        role.setPrivileges(privileges);
         return save(role);
-    }
-
-    public Page<Role> list(Condition condition, Pageable pageable) {
-        return roleRepository.findAll(SpecificationsUtils.withQuery(condition), pageable);
     }
 
     @Override

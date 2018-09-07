@@ -2,7 +2,7 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
 import hu.springconfig.TestBase;
-import hu.springconfig.config.message.IdentityMessages;
+import hu.springconfig.config.message.entity.IdentityMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ForbiddenException;

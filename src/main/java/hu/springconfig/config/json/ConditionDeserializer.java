@@ -30,7 +30,8 @@ public class ConditionDeserializer extends StdDeserializer<Condition> {
     }
 
     @Override
-    public Condition deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public Condition deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
+            JsonProcessingException {
         JsonNode node = p.getCodec().readTree(p);
         Condition condition = null;
 
@@ -40,7 +41,7 @@ public class ConditionDeserializer extends StdDeserializer<Condition> {
             if (node.get("value").isTextual()) {
                 try {
                     String val = node.get("value").textValue();
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    SimpleDateFormat formatter = new SimpleDateFormat(DateFormat.DATE_TIME_24H_FORMAT);
                     Date date = formatter.parse(val);
                     ((FieldCondition) condition).setValue(date);
                 } catch (ParseException e) {

@@ -1,7 +1,7 @@
 package hu.springconfig.validator.entity;
 
-import hu.springconfig.config.message.IdentityMessages;
 import hu.springconfig.config.message.MessageProvider;
+import hu.springconfig.config.message.entity.IdentityMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.exception.ValidationException;
 import hu.springconfig.util.Util;
@@ -40,7 +40,6 @@ public class IdentityValidator implements ITypeValidator<Identity> {
     public void validate(Identity entity) throws ValidationException {
         TypeValidationError error = createTypeValidationError();
         error.addErrorIfNotNull(validateEmail(entity.getEmail()));
-        error.addErrorIfNotNull(validateUsername(entity.getUsername()));
         checkResult(error);
     }
 
@@ -48,7 +47,6 @@ public class IdentityValidator implements ITypeValidator<Identity> {
             ValidationException {
         TypeValidationError error = createTypeValidationError();
         error.addErrorIfNotNull(validateEmail(entity.getEmail()));
-        error.addErrorIfNotNull(validateUsername(entity.getUsername()));
         error.addErrorIfNotNull(validatePasswordConfirm(password, passwordConfirm));
         checkResult(error);
     }
@@ -59,13 +57,6 @@ public class IdentityValidator implements ITypeValidator<Identity> {
         }
         if (!password.equals(passwordConfirm)) {
             return new FieldValidationError("passwordConfirm", IdentityMessages.IDENTITY_PASSWORD_CONFIRM_MISMATCH);
-        }
-        return null;
-    }
-
-    private FieldValidationError validateUsername(String username) {
-        if (!Util.validateString(username, usernameMin, usernameMax, usernameCharset)) {
-            return new FieldValidationError("username", IdentityMessages.IDENTITY_USERNAME_INVALID);
         }
         return null;
     }

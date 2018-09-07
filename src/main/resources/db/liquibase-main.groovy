@@ -129,4 +129,42 @@ databaseChangeLog {
             column(name: 'token_expiration', type: 'BIGINT')
         }
     }
+
+    changeSet(id: 'account-table', author: 'balazs_horvath') {
+        createTable(tableName: 'account') {
+            column(name: 'identity_id', type: 'BIGINT', autoIncrement: false) {
+                constraints(primaryKey: true, primaryKeyName: 'account_pkey')
+            }
+            column(name: 'first_name', type: 'VARCHAR(255)')
+            column(name: 'last_name', type: 'VARCHAR(255)')
+            column(name: 'version', type: 'BIGINT')
+        }
+        addForeignKeyConstraint(baseColumnNames: 'identity_id', baseTableName: 'account', constraintName: 'account_identity_fk', deferrable: false, initiallyDeferred: false, onDelete: 'NO ACTION', onUpdate: 'NO ACTION', referencedColumnNames: 'id', referencedTableName: 'identity')
+    }
+
+    changeSet(id: 'invite-table', author: 'balazs_horvath') {
+        createTable(tableName: 'invite') {
+            column(name: 'id', type: 'BIGINT', autoIncrement: true) {
+                constraints(primaryKey: true, primaryKeyName: 'invite_pkey')
+            }
+            column(name: 'invite_key', type: 'VARCHAR(64)')
+            column(name: 'email', type: 'VARCHAR(255)')
+            column(name: 'used', type: 'BOOLEAN')
+            column(name: 'date', type: 'TIMESTAMPTZ')
+            column(name: 'version', type: 'BIGINT')
+        }
+        addUniqueConstraint(columnNames: 'email', constraintName: 'invite_email_unique', tableName: 'invite')
+        addUniqueConstraint(columnNames: 'invite_key', constraintName: 'invite_invite_key_unique', tableName: 'invite')
+    }
+
+    changeSet(id: 'identity-verification-code', author: 'balazs_horvath') {
+        addColumn(tableName: 'identity') {
+            column(name: 'verification_code', type: 'VARCHAR(64)')
+            column(name: 'login_fails', type: 'INT')
+        }
+    }
+    changeSet(id: 'identity-username-strip', author: 'balazs_horvath') {
+        dropColumn(tableName: 'identity', columnName: 'username')
+
+    }
 }

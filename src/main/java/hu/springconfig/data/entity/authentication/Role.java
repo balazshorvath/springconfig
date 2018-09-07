@@ -59,9 +59,17 @@ public class Role {
         this.privileges = privileges;
     }
 
+    public Role(Role role) {
+        this.id = role.id;
+        this.role = role.role;
+        this.privileges = role.privileges;
+        this.version = role.version;
+    }
+
     public Collection<? extends GrantedAuthority> createGrantedAuthorities() {
-        Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(Collectors.toList());
-        authorities.add(new SimpleGrantedAuthority(role));
+        Collection<GrantedAuthority> authorities = privileges.stream().map(Privilege::createGrantedAuthority).collect(
+                Collectors.toList());
+        authorities.add(new SimpleGrantedAuthority(role.trim()));
         return authorities;
     }
 

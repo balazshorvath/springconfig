@@ -1,6 +1,6 @@
 package hu.springconfig.validator.request;
 
-import hu.springconfig.config.message.ConditionMessages;
+import hu.springconfig.config.message.application.ConditionMessages;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
@@ -16,6 +16,9 @@ public class ConditionValidator implements ITypeValidator<Condition> {
 
     @Override
     public void validate(Condition condition) throws ValidationException {
+        if (condition == null) {
+            return;
+        }
         if (condition instanceof ConditionSet) {
             validateConditionSet((ConditionSet) condition);
         } else {

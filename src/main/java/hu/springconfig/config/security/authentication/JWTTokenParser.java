@@ -1,7 +1,7 @@
 package hu.springconfig.config.security.authentication;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hu.springconfig.config.message.AuthenticationMessages;
+import hu.springconfig.config.message.application.AuthenticationMessages;
 import hu.springconfig.data.dto.authentication.identity.IdentityDTO;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
@@ -82,7 +82,7 @@ public class JWTTokenParser extends LoggingComponent {
                          .getBody();
         } catch (ExpiredJwtException e) {
             throw new InvalidTokenException(AuthenticationMessages.JWT_EXPIRED);
-        } catch (ClaimJwtException e) {
+        } catch (MalformedJwtException | ClaimJwtException e) {
             throw new InvalidTokenException(AuthenticationMessages.JWT_INVALID);
         }
         String user = claims.getSubject();
@@ -92,6 +92,9 @@ public class JWTTokenParser extends LoggingComponent {
         }
         Long generated = claims.get("generated", Long.class);
         Identity identity = identityRepository.findOne(id);
+        if (identity == null) {
+            throw new InvalidTokenException(AuthenticationMessages.JWT_EXPIRED);
+        }
         if (identity.getTokenExpiration() != null && identity.getTokenExpiration() > generated) {
             throw new InvalidTokenException(AuthenticationMessages.JWT_EXPIRED);
         }

@@ -1,6 +1,6 @@
 package hu.springconfig.validator.entity;
 
-import hu.springconfig.config.message.RoleMessages;
+import hu.springconfig.config.message.entity.RoleMessages;
 import hu.springconfig.data.entity.authentication.Role;
 import hu.springconfig.exception.ValidationException;
 import hu.springconfig.service.authentication.RoleService;

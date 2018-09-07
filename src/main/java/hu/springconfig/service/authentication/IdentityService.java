@@ -2,30 +2,24 @@ package hu.springconfig.service.authentication;
 
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.entity.authentication.Role;
-import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.exception.ForbiddenException;
 import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.base.EntityService;
 import hu.springconfig.service.mail.MailingService;
-import hu.springconfig.util.SpecificationsUtils;
 import hu.springconfig.util.Util;
 import hu.springconfig.validator.entity.IdentityValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.Collections;
 import java.util.Set;
 
-import static hu.springconfig.config.message.IdentityMessages.*;
+import static hu.springconfig.config.message.entity.IdentityMessages.*;
 
 @Service
-@Transactional
 public class IdentityService extends EntityService<Identity, Long> {
 
     @Autowired
@@ -82,21 +76,18 @@ public class IdentityService extends EntityService<Identity, Long> {
     public Identity changeEmailSelf(Identity current, String password, String newEmail) {
         checkPassword(current, password);
         current.setEmail(newEmail);
-        return save(current);
-    }
-
-    public Identity changeUsernameSelf(Identity current, String password, String newUsername) {
-        checkPassword(current, password);
-        current.setUsername(newUsername);
         current.setTokenExpiration(System.currentTimeMillis());
         return save(current);
     }
 
-    public Identity resetPassword(String email, String username) {
-        Identity identity = findByUsername(username);
-        if (!Util.notNullAndNotEmpty(email) || !email.equals(identity.getEmail())) {
-            throw new ForbiddenException(IDENTITY_RESET_PASSWORD_FAILED);
-        }
+//    public Identity changeUsernameSelf(Identity current, String password, String newUsername) {
+//        checkPassword(current, password);
+//        current.setTokenExpiration(System.currentTimeMillis());
+//        return save(current);
+//    }
+
+    public Identity resetPassword(String email) {
+        Identity identity = findByEmail(email);
 
         String newPassword = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
         identity.setPassword(encoder.encode(newPassword));
@@ -105,26 +96,30 @@ public class IdentityService extends EntityService<Identity, Long> {
         return save(identity);
     }
 
-    public Identity updateIdentity(Identity current, Long id, String username, String email, long version) {
+    public Identity updateIdentity(Identity current, Long id, String email, long version) {
         Identity identity = get(id);
         if (identity.isSuperiorTo(current)) {
             throw new ForbiddenException(IDENTITY_LOW_RANK);
         }
-        if (Util.notNullAndNotEmpty(username)) {
+        if (Util.notNullAndNotEmpty(email)) {
             current.setTokenExpiration(System.currentTimeMillis());
         }
-        identity.setUsername(username);
         identity.setEmail(email);
         identity.setVersion(version);
         return save(identity);
     }
 
-    public Identity createIdentity(String username, String email, String password, String passwordConfirm) {
+    public Identity createIdentity(String email, String password, String passwordConfirm) {
+        return createIdentity(email, password, passwordConfirm, null);
+    }
+
+    public Identity createIdentity(String email, String password, String passwordConfirm, String
+            verification) {
         Identity identity = new Identity();
-        identity.setUsername(username);
         identity.setEmail(email);
         identity.setRoles(Collections.singleton(roleService.get(RoleService.USER_ROLE_ID)));
         identity.setPassword(encoder.encode(password));
+        identity.setVerificationCode(verification);
 
         return saveWithPasswords(identity, password, passwordConfirm);
     }
@@ -137,25 +132,39 @@ public class IdentityService extends EntityService<Identity, Long> {
         identityRepository.delete(id);
     }
 
-    public Identity findByUsername(String username) {
-        Identity identity = identityRepository.findByUsername(username);
+    public void verify(String verificationCode) {
+        Identity identity = findByVerificationCode(verificationCode);
+        identity.setVerificationCode(null);
+        save(identity);
+    }
+
+    public void unlock(Long id) {
+        Identity identity = get(id);
+        identity.setLoginFails(0);
+        save(identity);
+    }
+
+    public Identity findByEmail(String email) {
+        Identity identity = identityRepository.findByEmail(email);
         if (identity == null) {
             throw new NotFoundException(IDENTITY_NOT_FOUND);
         }
         return identity;
     }
 
+    public Identity findByVerificationCode(String verificationCode) {
+        Identity identity = identityRepository.findByVerificationCode(verificationCode);
+        if (identity == null) {
+            throw new NotFoundException(IDENTITY_NOT_FOUND);
+        }
+        return identity;
+    }
+
+
     private void checkPassword(Identity identity, String password) {
         if (!Util.notNullAndNotEmpty(password) || !encoder.matches(password, identity.getPassword())) {
             throw new ForbiddenException(IDENTITY_CHECK_PASSWORD_FAILED);
         }
-    }
-
-    public Page<Identity> list(Condition condition, Pageable pageable) {
-        return identityRepository.findAll(
-                SpecificationsUtils.withQuery(condition),
-                pageable
-        );
     }
 
     private Identity saveWithPasswords(Identity identity, String password, String passwordConfirm) {
@@ -171,5 +180,11 @@ public class IdentityService extends EntityService<Identity, Long> {
     @Override
     protected String getEntityName() {
         return ENTITY_NAME;
+    }
+
+    public void loginFailed(Long id) {
+        Identity identity = get(id);
+        identity.incrementLoginFails();
+        save(identity);
     }
 }

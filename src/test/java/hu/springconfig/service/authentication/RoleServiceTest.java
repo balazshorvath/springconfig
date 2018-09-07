@@ -1,11 +1,14 @@
 package hu.springconfig.service.authentication;
 
 import hu.springconfig.TestApplication;
-import hu.springconfig.config.message.RoleMessages;
+import hu.springconfig.config.message.entity.RoleMessages;
 import hu.springconfig.data.entity.authentication.Privilege;
 import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.data.repository.account.IAccountRepository;
+import hu.springconfig.data.repository.account.IInviteRepository;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import hu.springconfig.data.repository.authentication.IRoleRepository;
+import hu.springconfig.data.repository.meal.IMealRepository;
 import hu.springconfig.exception.ForbiddenException;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,9 +32,15 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class RoleServiceTest {
     @MockBean
-    protected IIdentityRepository identityRepository;
+    private IMealRepository mealRepository;
+    @MockBean
+    private IIdentityRepository identityRepository;
     @MockBean
     private IRoleRepository roleRepository;
+    @MockBean
+    protected IAccountRepository accountRepository;
+    @MockBean
+    private IInviteRepository inviteRepository;
     @Autowired
     private RoleService underTest;
 

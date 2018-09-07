@@ -1,11 +1,15 @@
 package hu.springconfig.util;
 
+import hu.springconfig.config.message.application.ConditionMessages;
 import hu.springconfig.data.query.model.Condition;
 import hu.springconfig.data.query.model.ConditionSet;
 import hu.springconfig.data.query.model.FieldCondition;
+import hu.springconfig.exception.BadRequestException;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.*;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -73,24 +77,48 @@ public class SpecificationsUtils {
         Class<?> type = path.getJavaType();
         if (type.equals(boolean.class) || type.equals(Boolean.class)) {
             predicate = getBoolean(fieldCondition.getRelationalOperator(),
-                    (Boolean) fieldCondition.getValue(), path, cb);
+                                   (Boolean) fieldCondition.getValue(), path, cb
+            );
         } else if (Number.class.isAssignableFrom(type) || type.isPrimitive()) {
             predicate = getNumber(fieldCondition.getRelationalOperator(),
-                    (Number) fieldCondition.getValue(), path, cb);
+                                  (Number) fieldCondition.getValue(), path, cb
+            );
         } else if (type.equals(Date.class)) {
+            Object value = fieldCondition.getValue();
+            Date dateValue;
+            if (Number.class.isAssignableFrom(value.getClass())) {
+                dateValue = new Date((Long) value);
+            } else if (value instanceof String) {
+                try {
+                    dateValue = DateFormat.getInstance().parse((String) value);
+                } catch (ParseException e) {
+                    throw new BadRequestException(ConditionMessages.CONDITION_DATE_VALUE_INVALID);
+                }
+            } else {
+                try {
+                    dateValue = (Date) value;
+                } catch (ClassCastException e) {
+                    throw new BadRequestException(ConditionMessages.CONDITION_DATE_VALUE_INVALID);
+                }
+            }
             predicate = getDate(fieldCondition.getRelationalOperator(),
-                    (Date) fieldCondition.getValue(), path, cb);
+                                dateValue, path, cb
+            );
+
         } else { //if (type.equals(String.class)) {
             // This is a bit bad, but in case there's an enum for example, this will work
             // Other cases should result in error anyways
             predicate = getString(fieldCondition.getRelationalOperator(),
-                    (String) fieldCondition.getValue(), path, cb);
+                                  (String) fieldCondition.getValue(), path, cb
+            );
         }
 
         return predicate;
     }
 
-    private static Predicate getDate(FieldCondition.RelationalOperator operator, Date value, Path<? extends Date> path, CriteriaBuilder cb) {
+
+    private static Predicate getDate(FieldCondition.RelationalOperator operator, Date value, Path<? extends Date>
+            path, CriteriaBuilder cb) {
         Predicate predicate = null;
         switch (operator) {
             case ne:
@@ -104,12 +132,23 @@ public class SpecificationsUtils {
                 break;
             case eq:
             default:
+                // Solve the problem of datetimes.
+//                Calendar calendar = Calendar.getInstance();
+//                calendar.setTime(value);
+//                calendar.set(Calendar.HOUR_OF_DAY, 0);
+//                calendar.set(Calendar.MINUTE, 0);
+//                calendar.set(Calendar.SECOND, 0);
+//                calendar.set(Calendar.MILLISECOND, 0);
+//                value = calendar.getTime();
+//
+//                calendar.add(Calendar.DAY_OF_YEAR, 1);
                 predicate = cb.equal(path, value);
         }
         return predicate;
     }
 
-    private static Predicate getBoolean(FieldCondition.RelationalOperator operator, Boolean value, Path<? extends Boolean> path, CriteriaBuilder cb) {
+    private static Predicate getBoolean(FieldCondition.RelationalOperator operator, Boolean value, Path<? extends
+            Boolean> path, CriteriaBuilder cb) {
         Predicate predicate = null;
         switch (operator) {
             case ne:
@@ -122,7 +161,8 @@ public class SpecificationsUtils {
         return predicate;
     }
 
-    private static Predicate getNumber(FieldCondition.RelationalOperator operator, Number value, Path<? extends Number> path, CriteriaBuilder cb) {
+    private static Predicate getNumber(FieldCondition.RelationalOperator operator, Number value, Path<? extends
+            Number> path, CriteriaBuilder cb) {
         Predicate predicate = null;
         switch (operator) {
             case ne:
@@ -141,8 +181,9 @@ public class SpecificationsUtils {
         return predicate;
     }
 
-    private static Predicate getString(FieldCondition.RelationalOperator operator, String value, Path<? extends String> path, CriteriaBuilder cb) {
-        String queryString = value.toLowerCase();
+    private static Predicate getString(FieldCondition.RelationalOperator operator, String value, Path<? extends
+            String> path, CriteriaBuilder cb) {
+        String queryString = value.toUpperCase();
         Expression<String> field = cb.lower((Path<String>) path);
         switch (operator) {
             case contains:
@@ -155,7 +196,7 @@ public class SpecificationsUtils {
                 queryString = "%" + queryString;
                 break;
         }
-        return cb.like(field, queryString);
+        return cb.like(cb.upper(field), queryString);
     }
 
     private static <T> Path joinFields(String fieldName, Root<T> root) {

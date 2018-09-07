@@ -16,9 +16,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.Set;
 
 @RestController
+@Transactional
 public class IdentityController {
     @Autowired
     private IdentityService identityService;
@@ -31,34 +33,54 @@ public class IdentityController {
 
     /* Standard user features */
 
+    /**
+     * This had to be removed, got taken over by {@link hu.springconfig.controller.AccountController}.
+     *
+     * @param identity
+     * @return
+     */
     @PostMapping("/auth/register")
     public OKResponse register(@RequestBody IdentityCreate identity) {
-        identityService.createIdentity(identity.getUsername(), identity.getEmail(), identity.getPassword(), identity.getPasswordConfirm());
+        identityService.createIdentity(
+                identity.getEmail(),
+                identity.getPassword(),
+                identity.getPasswordConfirm()
+        );
         return new OKResponse();
     }
 
     @PostMapping("/auth/resetPassword")
     public OKResponse resetPassword(@RequestBody ResetPassword resetPassword) {
-        identityService.resetPassword(resetPassword.getEmail(), resetPassword.getUsername());
+
+        identityService.resetPassword(resetPassword.getEmail());
         return new OKResponse();
     }
 
     @PostMapping("/auth/changeEmail")
     public OKResponse changeEmail(@RequestBody SecuredUpdate update, Authentication authentication) {
-        identityService.changeEmailSelf((Identity) authentication.getPrincipal(), update.getPassword(), update.getValue());
+        identityService.changeEmailSelf(
+                (Identity) authentication.getPrincipal(),
+                update.getPassword(),
+                update.getValue()
+        );
         return new OKResponse();
     }
 
-    @PostMapping("/auth/changeUsername")
-    public OKResponse changeUsername(@RequestBody SecuredUpdate update, Authentication authentication) {
-        identityService.changeUsernameSelf((Identity) authentication.getPrincipal(), update.getPassword(), update.getValue());
-        return new OKResponse();
-    }
+//    @PostMapping("/auth/changeUsername")
+//    public OKResponse changeUsername(@RequestBody SecuredUpdate update, Authentication authentication) {
+//        identityService.changeUsernameSelf(
+//                (Identity) authentication.getPrincipal(),
+//                update.getPassword(),
+//                update.getValue()
+//        );
+//        return new OKResponse();
+//    }
 
     @PostMapping("/auth/changePassword")
     public OKResponse changePassword(@RequestBody ChangePassword password, Authentication authentication) {
         identityService.changePassword((Identity) authentication.getPrincipal(), password.getOldPassword(),
-                password.getNewPassword(), password.getNewPasswordConfirm());
+                                       password.getNewPassword(), password.getNewPasswordConfirm()
+        );
         return new OKResponse();
     }
 
@@ -95,9 +117,21 @@ public class IdentityController {
     @PutMapping("/auth/{id}")
     public IdentityDTO put(@PathVariable Long id, @RequestBody IdentityUpdate update, Authentication authentication) {
         return modelMapper.map(
-                identityService.updateIdentity((Identity) authentication.getPrincipal(), id, update.getUsername(), update.getEmail(), update.getVersion()),
+                identityService.updateIdentity(
+                        (Identity) authentication.getPrincipal(),
+                        id,
+                        update.getEmail(),
+                        update.getVersion()
+                ),
                 IdentityDTO.class
         );
+    }
+
+    @PreAuthorize("hasAuthority('IDENTITY_UPDATE')")
+    @PostMapping("/auth/{id}/unlock")
+    public OKResponse unlock(@PathVariable Long id) {
+        identityService.unlock(id);
+        return new OKResponse();
     }
 
     @PreAuthorize("hasAuthority('IDENTITY_DELETE')")
@@ -109,7 +143,7 @@ public class IdentityController {
 
     @PreAuthorize("hasAuthority('IDENTITY_LIST')")
     @PostMapping("/auth/list")
-    public Page<IdentityDTO> list(@RequestBody Condition condition, Pageable pageable) {
+    public Page<IdentityDTO> list(@RequestBody(required = false) Condition condition, Pageable pageable) {
         conditionValidator.validate(condition);
         return identityService.list(condition, pageable).map(source -> modelMapper.map(source, IdentityDTO.class));
     }

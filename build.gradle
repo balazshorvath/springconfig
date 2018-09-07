@@ -8,13 +8,13 @@ buildscript {
 plugins {
     id 'java'
     id 'idea'
-    id 'war'
+//    id 'war'
     id 'io.franzbecker.gradle-lombok' version '1.11'
     id 'org.springframework.boot' version '1.5.9.RELEASE'
     id 'org.liquibase.gradle' version '1.2.4'
 }
 group 'hu.springconfig'
-version '0.0'
+version '1.1.0-' + System.getenv("BUILD_NUMBER")
 sourceCompatibility = 1.8
 
 // Integration tests

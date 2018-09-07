@@ -1,6 +1,7 @@
 package hu.springconfig.data.entity.authentication;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import hu.springconfig.data.entity.Account;
 import hu.springconfig.util.Util;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,18 +25,15 @@ import java.util.*;
 @Table(
         name = "Identity",
         uniqueConstraints = {
-                @UniqueConstraint(name = "identityUsernameUnique", columnNames = "username"),
-                @UniqueConstraint(name = "identityEmailUnique", columnNames = "email")
+                @UniqueConstraint(name = "email_unique", columnNames = "email")
         }
 )
-@EqualsAndHashCode(exclude = {"roles", "password", "version"})
-@ToString(exclude = {"password"})
+@EqualsAndHashCode(exclude = {"roles", "password", "version", "account"})
+@ToString(exclude = {"password", "roles", "account"})
 public class Identity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true)
-    private String username;
     @Column(unique = true)
     private String email;
     @JsonIgnore
@@ -46,6 +44,11 @@ public class Identity implements UserDetails {
      * Tokens acquired before this, should be handled as expired.
      */
     private Long tokenExpiration;
+    @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @PrimaryKeyJoinColumn
+    private Account account;
+    private String verificationCode;
+    private int loginFails;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "identity_roles",
@@ -62,10 +65,10 @@ public class Identity implements UserDetails {
 
     public Identity(Identity identity) {
         this.id = identity.id;
-        this.username = identity.username;
         this.email = identity.email;
         this.password = identity.password;
         this.tokenExpiration = identity.tokenExpiration;
+        this.account = identity.account;
         this.roles = identity.roles == null ? null : new HashSet<>(identity.roles);
         this.version = identity.version;
     }
@@ -89,6 +92,10 @@ public class Identity implements UserDetails {
         );
     }
 
+    public void incrementLoginFails() {
+        this.loginFails++;
+    }
+
     @JsonIgnore
     public Role getHighestRole() {
         return this.roles == null
@@ -106,13 +113,22 @@ public class Identity implements UserDetails {
     }
 
     @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !isAccountLocked();
+    }
+
+    public boolean isAccountLocked() {
+        return Util.notNullAndNotEmpty(this.verificationCode) || this.loginFails >= 3;
     }
 
     @Override

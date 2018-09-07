@@ -1,7 +1,7 @@
 package hu.springconfig.config.error;
 
-import hu.springconfig.config.message.HttpMessages;
 import hu.springconfig.config.message.MessageProvider;
+import hu.springconfig.config.message.application.HttpMessages;
 import hu.springconfig.exception.*;
 import hu.springconfig.validator.error.TypeValidationError;
 import org.springframework.beans.factory.annotation.Autowired;

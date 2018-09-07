@@ -22,6 +22,10 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    public static final String ACCOUNT_REGISTER_URL = "/account/register";
+    public static final String IDENTITY_REGISTER_URL = "/auth/register";
+    public static final String ACCOUNT_VERIFICATION_URL = "/account/*/verify";
+    public static final String ACCOUNT_REGISTER_INVITE_URL = "/account/invite/*/accept";
     @Autowired
     private AppUserDetailsService userDetailsService;
     @Autowired
@@ -37,14 +41,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().cors().and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeRequests()
-                .antMatchers("/auth/register", JWTAuthenticationFilter.LOGIN_REQUEST.getPattern()).permitAll()
-                .anyRequest().authenticated()
-                .and().httpBasic().disable()
-                .addFilterBefore(new JWTAuthenticationFilter(authenticationManager(), jwtTokenParser, objectMapper, messageProvider), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JWTAuthorizationFilter(authenticationManager(), jwtTokenParser, objectMapper), BasicAuthenticationFilter.class);
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .authorizeRequests()
+            .antMatchers(
+                    ACCOUNT_VERIFICATION_URL,
+                    ACCOUNT_REGISTER_URL,
+                    IDENTITY_REGISTER_URL,
+                    ACCOUNT_REGISTER_INVITE_URL,
+                    JWTAuthenticationFilter.LOGIN_REQUEST.getPattern()
+            ).permitAll()
+            .anyRequest().authenticated()
+//            .and().exceptionHandling().accessDeniedHandler(new AppAccessDeniedHandler(objectMapper, messageProvider))
+            .and().httpBasic().disable()
+            .addFilterBefore(new JWTAuthenticationFilter(
+                    authenticationManager(),
+                    jwtTokenParser,
+                    objectMapper,
+                    messageProvider
+            ), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(
+                    new JWTAuthorizationFilter(authenticationManager(), jwtTokenParser, objectMapper),
+                    BasicAuthenticationFilter.class
+            );
 //                .exceptionHandling().authenticationEntryPoint(unauthorizedEntryPoint());
     }
 

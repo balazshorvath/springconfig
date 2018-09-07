@@ -5,8 +5,8 @@ import hu.springconfig.Application;
 import hu.springconfig.IntegrationTestBase;
 import hu.springconfig.config.error.APIError;
 import hu.springconfig.config.error.APIValidationError;
-import hu.springconfig.config.message.HttpMessages;
-import hu.springconfig.config.message.IdentityMessages;
+import hu.springconfig.config.message.application.HttpMessages;
+import hu.springconfig.config.message.entity.IdentityMessages;
 import hu.springconfig.data.dto.authentication.Credentials;
 import hu.springconfig.data.dto.authentication.SecuredUpdate;
 import hu.springconfig.data.dto.authentication.identity.*;
@@ -27,6 +27,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
@@ -50,6 +52,7 @@ import static org.mockito.Mockito.verify;
         classes = {Application.class}
 )
 public class IdentityIntegrationTest extends IntegrationTestBase {
+    private final Logger log = LoggerFactory.getLogger(getClass());
     @MockBean
     private MailingService mailingService;
 
@@ -63,9 +66,8 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     public void testAuthentication() {
         final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
         final Set<Role> userRoles = Collections.singleton(userRole);
-        final String username = "user";
         final String email = "user@user.com";
-        addIdentity(userRoles, username, email);
+        addIdentity(userRoles, email);
 
         /*
          * Test empty request
@@ -133,9 +135,9 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
          * Test valid credentials
          */
         Credentials credentials = new Credentials();
-        credentials.setPassword(username);
-        credentials.setUsername(username);
-        authenticateAndValidate(Collections.singleton(RoleService.USER_ROLE_ID), username, email, credentials);
+        credentials.setPassword(email);
+        credentials.setUsername(email);
+        authenticateAndValidate(Collections.singleton(RoleService.USER_ROLE_ID), email, credentials);
     }
 
 
@@ -143,9 +145,7 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     public void testIdentityFeaturesAdminRole() throws IOException {
         final Role userRole = roleRepository.findOne(RoleService.USER_ROLE_ID);
         final Role adminRole = roleRepository.findOne(RoleService.ADMIN_ROLE_ID);
-        final Role managerRole = roleRepository.save(
-                new Role(500, "MANAGER", Collections.singleton(new Privilege(Privilege.Privileges.IDENTITY_GRANT)))
-        );
+        final Role managerRole = roleRepository.findByRole("MANAGER");
         final Set<Role> adminRoles = Collections.singleton(adminRole);
         final Set<Role> userRoles = Collections.singleton(userRole);
         final String password = "admin";
@@ -153,15 +153,18 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
 
         admin.setPassword(encoder.encode(password));
         admin.setEmail("admin@admin.com");
-        admin.setUsername(password);
         admin.setRoles(adminRoles);
 
+        admin = identityRepository.save(admin);
+        admin = new Identity();
+        admin.setPassword(encoder.encode(password));
+        admin.setEmail("admin1@admin.com");
+        admin.setRoles(adminRoles);
         admin = identityRepository.save(admin);
 
         for (int i = 0; i < 50; i++) {
             Identity identity = new Identity();
             identity.setRoles(userRoles);
-            identity.setUsername("user" + i);
             identity.setEmail("user" + i + "@user." + (i % 2 == 0 ? "hu" : "com"));
             identity.setPassword(encoder.encode("password" + i));
             identityRepository.save(identity);
@@ -171,16 +174,19 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
          * Authenticate
          */
         Credentials credentials = new Credentials();
-        credentials.setUsername(admin.getUsername());
+        credentials.setUsername(admin.getEmail());
         credentials.setPassword(password);
-        authenticateAndValidate(adminRoles.stream().map(Role::getId).collect(Collectors.toSet()), admin.getUsername()
-                , admin.getEmail(), credentials);
+        authenticateAndValidate(
+                adminRoles.stream().map(Role::getId).collect(Collectors.toSet()),
+                admin.getEmail(),
+                credentials
+        );
 
         /*
          * Specifications test
          */
-        ParameterizedTypeReference<CustomPageImpl<IdentityDTO>> parameterizedTypeReference = new
-                ParameterizedTypeReference<CustomPageImpl<IdentityDTO>>() {
+        ParameterizedTypeReference<CustomPageImpl<IdentityDTO>> parameterizedTypeReference =
+                new ParameterizedTypeReference<CustomPageImpl<IdentityDTO>>() {
                 };
         int numberOfElements = 10;
         String pageRequest = createPageRequest(0, numberOfElements, Pair.of("name", "desc"));
@@ -245,16 +251,16 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
                 new FieldCondition(1, "email", FieldCondition.RelationalOperator.endswith, "com")
         );
         conditionSet.getConditions().add(
-                new FieldCondition(1, "username", FieldCondition.RelationalOperator.contains, "1")
+                new FieldCondition(1, "email", FieldCondition.RelationalOperator.contains, "1")
         );
         /*
          * role is "user" (50)
          * email ends with "com" (25)
-         * username contains "1", user1, user10-19 (10), user21, user31, user41 (14)
+         * email contains "1", user1, user10-19 (10), user21, user31, user41 (14)
          *
          * with AND: user1, user11, user13, user15, user17, user19, user21, user31, user41 (9)
          */
-        pageRequest = createPageRequest(0, 5, Pair.of("username", "asc"));
+        pageRequest = createPageRequest(0, 5, Pair.of("email", "asc"));
         entity = new HttpEntity<>(objectMapper.writeValueAsString(conditionSet), headers);
         queryResult = restTemplate.exchange("/auth/list?" + pageRequest, HttpMethod.POST, entity,
                                             parameterizedTypeReference
@@ -263,21 +269,20 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         List<IdentityDTO> content = page.getContent();
         assertPageResult(page, 5, 2, 9);
 
+        log.info("Page response: " + page);
         IdentityDTO identity = content.get(0);
-        assertEquals("user1", identity.getUsername());
-        assertEquals("user11", content.get(1).getUsername());
-        assertEquals("user17", content.get(4).getUsername());
+        assertEquals("user11@user.com", identity.getEmail());
+        assertEquals("user13@user.com", content.get(1).getEmail());
+        assertEquals("user19@user.com", content.get(4).getEmail());
 
         /*
          * Update
          */
         IdentityUpdate update = new IdentityUpdate();
         update.setEmail("user99@user.com");
-        update.setUsername("user99");
 
         IdentityDTO updated = putForObject("/auth/" + identity.getId(), update, IdentityDTO.class);
-        assertIdentity(updated, identity.getId(), "user99", "user99@user.com", Collections.singleton(RoleService
-                                                                                                             .USER_ROLE_ID));
+        assertIdentity(updated, identity.getId(), "user99@user.com", Collections.singleton(RoleService.USER_ROLE_ID));
         /*
          * Grant
          */
@@ -287,7 +292,6 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         assertIdentity(
                 updated,
                 identity.getId(),
-                "user99",
                 "user99@user.com",
                 (Set<Integer>) Util.CollectionBuilder.<Integer>newSet().add(userRole.getId()).add(managerRole.getId()
                 ).get()
@@ -301,7 +305,6 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         assertIdentity(
                 updated,
                 identity.getId(),
-                "user99",
                 "user99@user.com",
                 Collections.singleton(managerRole.getId())
         );
@@ -310,7 +313,7 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
          */
         OKResponse response = deleteForObject("/auth/" + updated.getId(), OKResponse.class);
         assertNotNull(response);
-        assertNull(identityRepository.findByUsername(updated.getUsername()));
+        assertNull(identityRepository.findByEmail(updated.getEmail()));
     }
 
     private void assertPageResult(CustomPageImpl<IdentityDTO> identityPage, int numberOfElements, int totalPages, int
@@ -325,8 +328,6 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
     @Test
     public void testIdentityFeaturesUserRole() throws IOException, InterruptedException {
         final Set<Integer> roles = Collections.singleton(RoleService.USER_ROLE_ID);
-        final String username = "myname";
-        final String newUsername = "newusername";
         final String email = "myaddress@soemthing.com";
         final String newEmail = "newmail@something.com";
         final String password = "goodpw";
@@ -341,9 +342,8 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         create.setEmail(email);
         create.setPassword(password);
         create.setPasswordConfirm(password);
-        create.setUsername(username);
 
-        credentials.setUsername(username);
+        credentials.setUsername(email);
         credentials.setPassword(password);
 
         /*
@@ -357,17 +357,17 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
                 validationError.getBody().getError(),
                 IdentityMessages.IDENTITY_VALIDATION_ERROR,
                 Identity.class,
-                new FieldValidationError("username_unique", IdentityMessages.IDENTITY_USERNAME_UNIQUE_VIOLATION)
+                new FieldValidationError("email_unique", IdentityMessages.IDENTITY_EMAIL_UNIQUE_VIOLATION)
         );
-        IdentityDTO identityToken = authenticateAndValidate(roles, username, email, credentials);
+        IdentityDTO identityToken = authenticateAndValidate(roles, email, credentials);
 
-        testGet(roles, username, email, identityToken);
+        testGet(roles, email, identityToken);
         // NOTE: After this request, the token should be expired, and user should re-authenticate
         testChangePassword(password, newPassword);
         // NOTE: After this request, the token should be expired, and user should re-authenticate
-        identityToken = testChangeUsername(roles, username, newUsername, email, newPassword, credentials);
-        assertNotNull(identityToken);
-        identityToken = testChangeEmail(roles, newUsername, email, newEmail, newPassword, credentials);
+//        identityToken = testChangeUsername(roles, email, newPassword, credentials);
+//        assertNotNull(identityToken);
+        identityToken = testChangeEmail(roles, email, newEmail, newPassword, credentials);
         assertNotNull(identityToken);
 
         /*
@@ -405,7 +405,6 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
          */
         IdentityUpdate update = new IdentityUpdate();
         update.setEmail("whatevea");
-        update.setUsername("asdqt");
 
         error = putForEntity("/auth/" + identityToken.getId(), update, APIError.class);
         assertResponseEntity(error, HttpStatus.FORBIDDEN);
@@ -443,7 +442,6 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
         ResetPassword resetPassword = new ResetPassword();
         resetPassword.setEmail("invalid");
-        resetPassword.setUsername("invalid");
 
         error = restTemplate.postForEntity("/auth/resetPassword", resetPassword, APIError.class);
         assertResponseEntity(error, HttpStatus.NOT_FOUND);
@@ -454,13 +452,13 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
                 HttpStatus.NOT_FOUND
         );
 
-        resetPassword.setUsername(newUsername);
-        error = restTemplate.postForEntity("/auth/resetPassword", resetPassword, APIError.class);
-        assertResponseEntity(error, HttpStatus.FORBIDDEN);
-        assertAPIError(error.getBody(),
-                       IdentityMessages.IDENTITY_RESET_PASSWORD_FAILED, ForbiddenException.class, HttpStatus
-                               .FORBIDDEN
-        );
+//        resetPassword.setEmail(newEmail);
+//        error = restTemplate.postForEntity("/auth/resetPassword", resetPassword, APIError.class);
+//        assertResponseEntity(error, HttpStatus.FORBIDDEN);
+//        assertAPIError(error.getBody(),
+//                       IdentityMessages.IDENTITY_RESET_PASSWORD_FAILED, ForbiddenException.class, HttpStatus
+//                               .FORBIDDEN
+//        );
 
         resetPassword.setEmail(newEmail);
         okResponse = restTemplate.postForObject("/auth/resetPassword", resetPassword, OKResponse.class);
@@ -481,12 +479,13 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         /*
          * Authenticate with the new password
          */
+        credentials.setUsername(newEmail);
         credentials.setPassword(generatedPassword);
-        authenticateAndValidate(roles, newUsername, newEmail, credentials);
+        authenticateAndValidate(roles, newEmail, credentials);
     }
 
 
-    private IdentityDTO testChangeEmail(Set<Integer> roles, String username, String email, String newEmail, String
+    private IdentityDTO testChangeEmail(Set<Integer> roles, String email, String newEmail, String
             newPassword, Credentials credentials) throws InterruptedException {
         SecuredUpdate securedUpdate;
         ResponseEntity<APIError> error;
@@ -505,8 +504,8 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
 
         // Acquire new token
         credentials.setPassword(newPassword);
-        credentials.setUsername(username);
-        identityToken = authenticateAndValidate(roles, username, email, credentials);
+        credentials.setUsername(email);
+        identityToken = authenticateAndValidate(roles, email, credentials);
 
         // Try changing email again
         // Case 2: Password is invalid
@@ -521,45 +520,46 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         securedUpdate.setPassword(newPassword);
         okResponse = restTemplate.postForObject("/auth/changeEmail", securedUpdate, OKResponse.class);
 
+        credentials.setUsername(newEmail);
         assertNotNull(okResponse);
-        return identityToken;
+        return authenticateAndValidate(roles, newEmail, credentials);
     }
 
-    private IdentityDTO testChangeUsername(Set<Integer> roles, String username, String newUsername, String email,
-                                           String newPassword, Credentials credentials) throws InterruptedException {
-        ResponseEntity<APIError> error;
-        OKResponse okResponse;
-        // Change username          POST    /auth/changeUsername
-        // NOTE: After the previous request, the token should be expired, and user should re-authenticate
-        // Case 1: Token expired
-        SecuredUpdate securedUpdate = new SecuredUpdate();
-        securedUpdate.setPassword("wrongpw");
-        securedUpdate.setValue(newUsername);
-
-        error = restTemplate.postForEntity("/auth/changeUsername", securedUpdate, APIError.class);
-        assertResponseEntity(error, HttpStatus.UNAUTHORIZED);
-        assertAPIError(error.getBody(), "jwt.expired", InvalidTokenException.class, HttpStatus.UNAUTHORIZED);
-
-        // Acquire new token
-        credentials.setPassword(newPassword);
-        IdentityDTO identityDTO = authenticateAndValidate(roles, username, email, credentials);
-
-        // Try changing username again
-        // Case 2: Password is invalid
-        error = restTemplate.postForEntity("/auth/changeUsername", securedUpdate, APIError.class);
-        assertResponseEntity(error, HttpStatus.FORBIDDEN);
-        assertAPIError(error.getBody(),
-                       IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, ForbiddenException.class, HttpStatus
-                               .FORBIDDEN
-        );
-
-        // Case 3: Success
-        securedUpdate.setPassword(newPassword);
-        okResponse = restTemplate.postForObject("/auth/changeUsername", securedUpdate, OKResponse.class);
-
-        assertNotNull(okResponse);
-        return identityDTO;
-    }
+//    private IdentityDTO testChangeUsername(Set<Integer> roles, String newUsername, String email,
+//                                           String newPassword, Credentials credentials) throws InterruptedException {
+//        ResponseEntity<APIError> error;
+//        OKResponse okResponse;
+//        // Change username          POST    /auth/changeUsername
+//        // NOTE: After the previous request, the token should be expired, and user should re-authenticate
+//        // Case 1: Token expired
+//        SecuredUpdate securedUpdate = new SecuredUpdate();
+//        securedUpdate.setPassword("wrongpw");
+//        securedUpdate.setValue(newUsername);
+//
+//        error = restTemplate.postForEntity("/auth/changeUsername", securedUpdate, APIError.class);
+//        assertResponseEntity(error, HttpStatus.UNAUTHORIZED);
+//        assertAPIError(error.getBody(), "jwt.expired", InvalidTokenException.class, HttpStatus.UNAUTHORIZED);
+//
+//        // Acquire new token
+//        credentials.setPassword(newPassword);
+//        IdentityDTO identityDTO = authenticateAndValidate(roles, email, credentials);
+//
+//        // Try changing username again
+//        // Case 2: Password is invalid
+//        error = restTemplate.postForEntity("/auth/changeUsername", securedUpdate, APIError.class);
+//        assertResponseEntity(error, HttpStatus.FORBIDDEN);
+//        assertAPIError(error.getBody(),
+//                       IdentityMessages.IDENTITY_CHECK_PASSWORD_FAILED, ForbiddenException.class, HttpStatus
+//                               .FORBIDDEN
+//        );
+//
+//        // Case 3: Success
+//        securedUpdate.setPassword(newPassword);
+//        okResponse = restTemplate.postForObject("/auth/changeUsername", securedUpdate, OKResponse.class);
+//
+//        assertNotNull(okResponse);
+//        return identityDTO;
+//    }
 
     private void testChangePassword(String password, String newPassword) {
         ResponseEntity<APIError> error;
@@ -619,11 +619,11 @@ public class IdentityIntegrationTest extends IntegrationTestBase {
         assertNotNull(okResponse);
     }
 
-    private void testGet(Set<Integer> roles, String username, String email, IdentityDTO identityToken) {
+    private void testGet(Set<Integer> roles, String email, IdentityDTO identityToken) {
         // Get self                 GET     /auth/{id}
         IdentityDTO identity = restTemplate.getForObject("/auth/" + identityToken.getId(), IdentityDTO.class);
 
-        assertIdentity(identity, identityToken.getId(), username, email, roles);
+        assertIdentity(identity, identityToken.getId(), email, roles);
 
         // TODO: Use APIValidationError
         // Try get other, fail      GET     /auth/{id}

@@ -9,7 +9,6 @@ import java.util.Set;
 @Data
 public class IdentityDTO {
     private Long id;
-    private String username;
     private String email;
     private Date tokenExpiration;
     private Set<Role> roles;

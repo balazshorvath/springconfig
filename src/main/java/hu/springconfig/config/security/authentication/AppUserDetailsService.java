@@ -1,6 +1,6 @@
 package hu.springconfig.config.security.authentication;
 
-import hu.springconfig.config.message.AuthenticationMessages;
+import hu.springconfig.config.message.application.AuthenticationMessages;
 import hu.springconfig.data.entity.authentication.Identity;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class AppUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Identity identity = identityRepository.findByUsername(username);
+        Identity identity = identityRepository.findByEmail(username);
         if (identity == null) {
             throw new UsernameNotFoundException(AuthenticationMessages.AUTHENTICATION_FAILED_CREDENTIALS);
         }

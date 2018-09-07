@@ -1,8 +1,10 @@
 package hu.springconfig.config.init;
 
+import hu.springconfig.data.entity.Account;
 import hu.springconfig.data.entity.authentication.Identity;
+import hu.springconfig.data.entity.authentication.Role;
+import hu.springconfig.data.repository.account.IAccountRepository;
 import hu.springconfig.data.repository.authentication.IIdentityRepository;
-import hu.springconfig.exception.NotFoundException;
 import hu.springconfig.service.authentication.IdentityService;
 import hu.springconfig.service.authentication.RoleService;
 import hu.springconfig.service.base.LoggingComponent;
@@ -14,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.List;
 
 @Component
 public class InitDatabase extends LoggingComponent implements ApplicationListener<ApplicationReadyEvent> {
@@ -21,6 +24,8 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
     private IdentityService identityService;
     @Autowired
     private IIdentityRepository identityRepository;
+    @Autowired
+    private IAccountRepository accountRepository;
     @Autowired
     private RoleService roleService;
     @Autowired
@@ -35,17 +40,23 @@ public class InitDatabase extends LoggingComponent implements ApplicationListene
      */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        try {
-            identityService.findByUsername("administrator");
-        } catch (NotFoundException e) {
+        Role adminRole = roleService.get(RoleService.ADMIN_ROLE_ID);
+        List<Identity> admins = identityRepository.findByRoles(adminRole);
+        if (admins.size() < 1) {
             String password = Util.randomString(Util.CHAR_AND_NUMBER_POOL, 8);
             Identity adminIdentity = new Identity();
-            adminIdentity.setUsername("administrator");
-            adminIdentity.setEmail("nomail");
+            Account adminAccount = new Account();
+            adminIdentity.setEmail("administrator");
             adminIdentity.setPassword(encoder.encode(password));
             adminIdentity.setRoles(Collections.singleton(roleService.get(RoleService.ADMIN_ROLE_ID)));
-            identityRepository.save(adminIdentity);
-            log.error("Recognized, that this is a newly deployed version. Created a new user with admin role, you can now login with the password: {}. Please change is ASAP!", password);
+            adminIdentity = identityRepository.save(adminIdentity);
+            adminAccount.setIdentity(adminIdentity);
+            adminAccount.setFirstName("Administrator");
+            log.error(
+                    "Recognized, that this is a newly deployed version. Created a new user with admin role, you can " +
+                            "now login with the password: {}. Please change is ASAP!",
+                    password
+            );
         }
     }
 
